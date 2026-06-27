@@ -1,5 +1,13 @@
 import { getFirstLevelDependencies, getExportResources, getSplitResources } from './resourceModel.js';
 
+const FLOW_RESOURCE_TYPE = 'genesyscloud_flow';
+
+function getLegacyArchitectFlowExporter(selectedResources, firstLevelDependencies) {
+  if (selectedResources.includes(FLOW_RESOURCE_TYPE)) return false;
+  if (firstLevelDependencies.includes(FLOW_RESOURCE_TYPE)) return true;
+  return null;
+}
+
 function uniqueSorted(values) {
   return [...new Set(values)].sort();
 }
@@ -50,6 +58,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     firstLevelDependencies: coreFirstLevelDependencies,
     includeFilterResources: coreExportResources,
     excludeResources: coreExcludeResources,
+    useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(coreSelectedResources, coreFirstLevelDependencies),
   };
 
   const focusedModels = focusedSplits.map(split => {
@@ -73,6 +82,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
       firstLevelDependencies,
       includeFilterResources: exportResources,
       excludeResources,
+      useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(selectedResources, firstLevelDependencies),
     };
   });
 

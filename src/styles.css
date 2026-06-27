@@ -46,6 +46,10 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 54px); line-height: 1.02; max-width:
 .hero-stats {
   display: grid;
   gap: 10px;
+  margin-top: 44px;
+}
+.hero-stats .stat-button {
+  min-height: 82px;
 }
 .mini-stat {
   display: flex;
@@ -180,7 +184,7 @@ h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: upper
   max-width: 420px;
   line-height: 1.5;
 }
-.output { margin-top: 18px; }
+.output { margin-top: 0; }
 .generated-file + .generated-file { margin-top: 18px; }
 .generated-file h3 { margin-top: 0; }
 .generated-file pre { max-height: 360px; }

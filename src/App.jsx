@@ -15,14 +15,27 @@ function formatTerraformResourceList(values) {
   return values.map(value => `    "${value}"`).join(',\n');
 }
 
-function buildSourceExportTemplate(includeFilterResources = []) {
+function getLegacyArchitectFlowExporterLine(split) {
+  if (split?.useLegacyArchitectFlowExporter === false) {
+    return '  use_legacy_architect_flow_exporter = false\n';
+  }
+
+  if (split?.useLegacyArchitectFlowExporter === true) {
+    return '  use_legacy_architect_flow_exporter = true\n';
+  }
+
+  return '';
+}
+
+function buildSourceExportTemplate(split) {
+  const includeFilterResources = split?.includeFilterResources || [];
+
   return `resource "genesyscloud_tf_export" "export" {
   directory             = "./genesyscloud"
   include_state_file    = false
   export_as_hcl         = true
   log_permission_errors = true
-  #use_legacy_architect_flow_exporter = true
-  include_filter_resources = [
+${getLegacyArchitectFlowExporterLine(split)}  include_filter_resources = [
 ${formatTerraformResourceList(includeFilterResources)}
   ]
 }`;
@@ -198,7 +211,7 @@ export default function App() {
   }, [model.splits, selectedSplit.name]);
 
   const selectedSourceExportTemplate = useMemo(() => {
-    return buildSourceExportTemplate(selectedGeneratedSplit?.includeFilterResources || []);
+    return buildSourceExportTemplate(selectedGeneratedSplit);
   }, [selectedGeneratedSplit]);
 
   const selectedExcludeResourcesCsv = useMemo(() => {
@@ -286,6 +299,9 @@ export default function App() {
 
   function restoreNoSyncResource(resource) {
     setNoSyncResources(current => current.filter(item => item !== resource));
+    setSplits(current => current.map(split => split.kind === 'default'
+      ? { ...split, selectedResources: [...new Set([...getSplitResources(split), resource])].sort() }
+      : { ...split, selectedResources: getSplitResources(split).filter(item => item !== resource) }));
   }
 
   function reset() {
@@ -302,7 +318,7 @@ export default function App() {
     if (splits.length === 0) return;
 
     downloadJsonFile({
-      filename: 'orgsync-split-workspace.json',
+      filename: 'orgsync-split-modeler.json',
       data: buildWorkspace({ splits, noSyncResources, model }),
     });
   }
@@ -345,6 +361,27 @@ export default function App() {
         <p className="eyebrow">OrgSync split modeler</p>
         <h1>Design splits without losing the “everything is connected” safety net.</h1>
         <p className="subhead">Core starts with every syncable resource except the default excluded resources. Add focused splits, move resource types out of core, and review the dependencies needed for each split.</p>
+
+        <section className="card split-nav">
+          <div className="section-title">
+            <div><h2>Splits</h2><p>Select core or a focused split to review and move resources.</p></div>
+            {!isAddingSplit && <button onClick={startAddingSplit}><Plus size={16}/> Add focused split</button>}
+          </div>
+          {isAddingSplit && <div className="field add-split-form">
+            <label>Add focused split</label>
+            <div className="inline">
+              <input value={newSplitName} onChange={event => setNewSplitName(event.target.value)} placeholder="split-name" />
+              <button onClick={addSplit}><CheckCircle2 size={16}/> Save</button>
+              <button className="ghost" onClick={cancelAddingSplit}>Cancel</button>
+            </div>
+          </div>}
+          <div className="split-list">
+            {splits.map(split => <button key={split.id} className={split.id === selectedSplitId ? 'split selected' : 'split'} onClick={() => { setSelectedSplitId(split.id); setQuery(''); }}>
+              <span><strong>{split.name}</strong><small>{getSplitResources(split).length} selected</small></span>
+              {split.kind !== 'default' && <Trash2 className="danger" size={16} onClick={event => { event.stopPropagation(); deleteSplit(split.id); }} />}
+            </button>)}
+          </div>
+        </section>
       </div>
       <div className="hero-actions">
         <div className="hero-action-buttons">
@@ -370,28 +407,6 @@ export default function App() {
       </div>
     </header>
 
-
-    <section className="card split-nav">
-      <div className="section-title">
-        <div><h2>Splits</h2><p>Select core or a focused split to review and move resources.</p></div>
-        {!isAddingSplit && <button onClick={startAddingSplit}><Plus size={16}/> Add focused split</button>}
-      </div>
-      {isAddingSplit && <div className="field add-split-form">
-        <label>Add focused split</label>
-        <div className="inline">
-          <input value={newSplitName} onChange={event => setNewSplitName(event.target.value)} placeholder="split-name" />
-          <button onClick={addSplit}><CheckCircle2 size={16}/> Save</button>
-          <button className="ghost" onClick={cancelAddingSplit}>Cancel</button>
-        </div>
-      </div>}
-      <div className="split-list">
-        {splits.map(split => <button key={split.id} className={split.id === selectedSplitId ? 'split selected' : 'split'} onClick={() => { setSelectedSplitId(split.id); setQuery(''); }}>
-          <span><strong>{split.name}</strong><small>{getSplitResources(split).length} selected</small></span>
-          {split.kind !== 'default' && <Trash2 className="danger" size={16} onClick={event => { event.stopPropagation(); deleteSplit(split.id); }} />}
-        </button>)}
-      </div>
-    </section>
-
     {resourceDialog && <div className="dialog-backdrop" role="presentation" onClick={() => setResourceDialogType(null)}>
         <section className="card resource-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-dialog-title" onClick={event => event.stopPropagation()}>
           <div className="section-title">
@@ -405,6 +420,21 @@ export default function App() {
       </div>}
 
       <main className="grid">
+        <section className="card available-panel">
+          <div className="section-title">
+            <div><h2>{selectedSplit.kind === 'focused' ? 'Core resources available to split' : 'Available resource types'}</h2><p>{selectedSplit.kind === 'focused' ? 'Move resources from core into this focused split.' : 'Not selected and not excluded.'}</p></div>
+            <strong>{availableResources.length}</strong>
+          </div>
+          <div className="search"><Search size={16}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="filter e.g. flow, routing, outbound" /></div>
+          <div className="resource-list">
+            {availableResources.map(resource => <div className="resource" key={resource}>
+              <code>{resource}</code>
+              <button onClick={() => moveToSplit(resource)}><ArrowRight size={14}/> add to {selectedSplit.name}</button>
+            </div>)}
+            {availableResources.length === 0 && <p className="empty">No available resources match that filter.</p>}
+          </div>
+        </section>
+
         <section className="card selected-panel">
           <div className="section-title">
             <div><h2>{selectedSplit.name}</h2><p>{selectedSplit.kind === 'default' ? 'Baseline resources owned by core.' : 'Resources explicitly selected for this focused split.'}</p></div>
@@ -418,21 +448,6 @@ export default function App() {
                 <button className="ghost danger" onClick={() => excludeResource(resource)}>exclude</button>
               </div>
             </div>)}
-          </div>
-        </section>
-
-        <section className="card available-panel">
-          <div className="section-title">
-            <div><h2>{selectedSplit.kind === 'focused' ? 'Core resources available to split' : 'Available resource types'}</h2><p>{selectedSplit.kind === 'focused' ? 'Move resources from core into this focused split.' : 'Not selected and not excluded.'}</p></div>
-            <strong>{availableResources.length}</strong>
-          </div>
-          <div className="search"><Search size={16}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="filter e.g. flow, routing, outbound" /></div>
-          <div className="resource-list">
-            {availableResources.map(resource => <div className="resource" key={resource}>
-              <code>{resource}</code>
-              <button onClick={() => moveToSplit(resource)}><ArrowRight size={14}/> add to {selectedSplit.name}</button>
-            </div>)}
-            {availableResources.length === 0 && <p className="empty">No available resources match that filter.</p>}
           </div>
         </section>
 
