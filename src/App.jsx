@@ -344,7 +344,7 @@ export default function App() {
       <div>
         <p className="eyebrow">OrgSync split modeler</p>
         <h1>Design splits without losing the “everything is connected” safety net.</h1>
-        <p className="subhead">Core starts with every syncable resource except the default no-sync list. Add focused splits, move resource types out of core, and review the first-level dependencies needed for each split.</p>
+        <p className="subhead">Core starts with every syncable resource except the default excluded resources. Add focused splits, move resource types out of core, and review the dependencies needed for each split.</p>
       </div>
       <div className="hero-actions">
         <div className="hero-action-buttons">
