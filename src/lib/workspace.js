@@ -1,4 +1,4 @@
-export const WORKSPACE_SCHEMA = 'orgsync-split-workspace';
+export const WORKSPACE_SCHEMA = 'orgsync-split-modeler';
 export const WORKSPACE_VERSION = 1;
 
 function getWorkspaceSplitKind(split) {
