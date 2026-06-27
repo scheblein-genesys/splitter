@@ -13,15 +13,25 @@ export function buildWorkspace({ splits, noSyncResources, model }) {
     exportedAt: new Date().toISOString(),
     splits: splits.map(split => {
       const generatedSplit = model?.splits?.find(item => item.name === split.name);
-
-      return {
+      const kind = getWorkspaceSplitKind(split);
+      const workspaceSplit = {
         name: split.name,
-        kind: getWorkspaceSplitKind(split),
+        kind,
         selectedResources: Array.isArray(split.selectedResources) ? split.selectedResources : [],
         firstLevelDependencies: generatedSplit?.firstLevelDependencies || [],
-        includeFilterResources: generatedSplit?.includeFilterResources || [],
-        excludeFilterResources: generatedSplit?.excludeFilterResources || [],
         excludeResources: generatedSplit?.excludeResources || [],
+      };
+
+      if (kind === 'default') {
+        return {
+          ...workspaceSplit,
+          excludeFilterResources: generatedSplit?.excludeFilterResources || [],
+        };
+      }
+
+      return {
+        ...workspaceSplit,
+        includeFilterResources: generatedSplit?.includeFilterResources || [],
       };
     }),
     noSyncResources,
