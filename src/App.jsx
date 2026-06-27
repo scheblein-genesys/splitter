@@ -27,18 +27,42 @@ function getLegacyArchitectFlowExporterLine(split) {
   return '';
 }
 
-function buildSourceExportTemplate(split) {
-  const includeFilterResources = split?.includeFilterResources || [];
+function getExportFilterConfig(split) {
+  if (split?.kind === 'default') {
+    const resources = split?.excludeFilterResources || [];
 
+    if (resources.length === 0) return null;
+
+    return {
+      name: 'exclude_filter_resources',
+      resources,
+    };
+  }
+
+  return {
+    name: 'include_filter_resources',
+    resources: split?.includeFilterResources || [],
+  };
+}
+
+function buildExportFilterBlock(split) {
+  const filterConfig = getExportFilterConfig(split);
+
+  if (!filterConfig) return '';
+
+  return `  ${filterConfig.name} = [
+${formatTerraformResourceList(filterConfig.resources)}
+  ]
+`;
+}
+
+function buildSourceExportTemplate(split) {
   return `resource "genesyscloud_tf_export" "export" {
   directory             = "./genesyscloud"
   include_state_file    = false
   export_as_hcl         = true
   log_permission_errors = true
-${getLegacyArchitectFlowExporterLine(split)}  include_filter_resources = [
-${formatTerraformResourceList(includeFilterResources)}
-  ]
-}`;
+${getLegacyArchitectFlowExporterLine(split)}${buildExportFilterBlock(split)}}`;
 }
 
 function buildExcludeResourcesCsv(excludeResources = []) {

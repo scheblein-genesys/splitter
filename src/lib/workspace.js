@@ -20,6 +20,7 @@ export function buildWorkspace({ splits, noSyncResources, model }) {
         selectedResources: Array.isArray(split.selectedResources) ? split.selectedResources : [],
         firstLevelDependencies: generatedSplit?.firstLevelDependencies || [],
         includeFilterResources: generatedSplit?.includeFilterResources || [],
+        excludeFilterResources: generatedSplit?.excludeFilterResources || [],
         excludeResources: generatedSplit?.excludeResources || [],
       };
     }),
