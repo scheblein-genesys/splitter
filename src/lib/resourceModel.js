@@ -49,11 +49,18 @@ export function validateSplits({ resources, splits, noSyncSet }) {
   };
 }
 
+const DEPENDENCY_EXPANSION_BLOCKLIST = new Set([
+  'genesyscloud_flow',
+  'genesyscloud_script',
+]);
+
 export function getFirstLevelDependencies({ selectedResources, dependencyMap }) {
   const selectedSet = new Set(selectedResources);
   const dependencies = new Set();
 
   selectedResources.forEach(resource => {
+    if (DEPENDENCY_EXPANSION_BLOCKLIST.has(resource)) return;
+
     (dependencyMap.get(resource) || []).forEach(dependency => {
       if (!selectedSet.has(dependency)) {
         dependencies.add(dependency);
