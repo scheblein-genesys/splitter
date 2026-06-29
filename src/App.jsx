@@ -449,7 +449,11 @@ export default function App() {
             <div><h2>{selectedSplit.kind === 'focused' ? 'Core resources available to split' : 'Available resource types'}</h2><p>{selectedSplit.kind === 'focused' ? 'Move resources from core into this focused split.' : 'Not selected and not excluded.'}</p></div>
             <strong>{availableResources.length}</strong>
           </div>
-          <div className="search"><Search size={16}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="filter e.g. flow, routing, outbound" /></div>
+          <div className="search">
+            <Search size={16}/>
+            <input value={query} onChange={event => setQuery(event.target.value)} placeholder="filter e.g. flow, routing, outbound" />
+            {query && <button className="ghost search-clear" onClick={() => setQuery('')} type="button">clear</button>}
+          </div>
           <div className="resource-list">
             {availableResources.map(resource => <div className="resource" key={resource}>
               <code>{resource}</code>

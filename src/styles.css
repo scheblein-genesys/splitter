@@ -186,14 +186,15 @@ h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: upper
   overflow-wrap: anywhere;
   white-space: normal;
 }
-.resource .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.resource button { padding: 7px 9px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.resource .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.resource button { min-height: 32px; padding: 0 10px; font-size: 12px; line-height: 1; white-space: nowrap; flex-shrink: 0; }
 .available-panel .resource button,
 .selected-panel .resource .actions {
   align-self: flex-end;
 }
 .search { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0 10px; margin-bottom: 12px; }
 .search input { border: 0; padding-left: 0; }
+.search-clear { padding: 6px 8px; font-size: 12px; min-height: auto; }
 .search input:focus { outline: none; }
 .empty { color: #64748b; font-style: italic; }
 .empty-state {
