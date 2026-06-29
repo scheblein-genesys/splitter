@@ -453,7 +453,7 @@ export default function App() {
           <div className="resource-list">
             {availableResources.map(resource => <div className="resource" key={resource}>
               <code>{resource}</code>
-              <button onClick={() => moveToSplit(resource)}><ArrowRight size={14}/> add to {selectedSplit.name}</button>
+              <button onClick={() => moveToSplit(resource)} title={`Add to ${selectedSplit.name}`}><ArrowRight size={14}/> add</button>
             </div>)}
             {availableResources.length === 0 && <p className="empty">No available resources match that filter.</p>}
           </div>

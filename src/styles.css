@@ -130,13 +130,22 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 54px); line-height: 1.02; max-width:
 .field label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; font-weight: 900; color: #64748b; margin: 0 0 6px; }
 .inline { display: flex; gap: 8px; }
 .grow { flex: 1; }
-.grid { display: grid; grid-template-columns: 280px 1fr 1fr; gap: 18px; align-items: start; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.grid > .card {
+  min-width: 0;
+}
 h2 { margin: 0; font-size: 20px; }
 h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: uppercase; letter-spacing: .08em; }
 .split-list { display: flex; flex-wrap: wrap; gap: 10px; }
-.split { width: auto; min-width: 220px; justify-content: space-between; text-align: left; background: #f8fafc; color: #172033; border: 1px solid #e2e8f0; }
+.split { width: auto; min-width: 220px; max-width: 280px; justify-content: space-between; text-align: left; background: #f8fafc; color: #172033; border: 1px solid #e2e8f0; }
 .split.selected { background: #eef2ff; border-color: #a5b4fc; }
-.split span { display: flex; flex-direction: column; gap: 3px; }
+.split span { display: flex; flex-direction: column; gap: 3px; min-width: 0; overflow: hidden; }
+.split strong,
+.split small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .split small { color: #64748b; font-weight: 700; }
 .add-split-form {
   margin-bottom: 12px;
@@ -157,13 +166,32 @@ h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: upper
 .chip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 7px 8px 7px 10px; background: #f1f5f9; color: #334155; font-size: 12px; }
 .chip button { padding: 4px 7px; border-radius: 999px; background: white; color: #334155; font-size: 11px; }
 .chip.excluded { background: #fff1f2; color: #9f1239; }
-.section-title { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 12px; }
+.section-title { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 12px; min-width: 0; }
+.section-title > div {
+  min-width: 0;
+}
+
 .section-title p { margin: 4px 0 0; color: #64748b; font-size: 14px; }
 .section-title strong { background: #f1f5f9; border-radius: 12px; padding: 8px 11px; }
 .resource-list { display: flex; flex-direction: column; gap: 8px; max-height: 720px; overflow: auto; padding-right: 4px; }
-.resource { border: 1px solid #e2e8f0; border-radius: 16px; padding: 10px; background: #ffffff; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.resource { border: 1px solid #e2e8f0; border-radius: 16px; padding: 10px; background: #ffffff; display: flex; justify-content: space-between; gap: 10px; align-items: center; min-width: 0; }
+.available-panel .resource,
+.selected-panel .resource {
+  align-items: stretch;
+  flex-direction: column;
+}
+.resource code {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
 .resource .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.resource button { padding: 7px 9px; font-size: 12px; white-space: nowrap; }
+.resource button { padding: 7px 9px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.available-panel .resource button,
+.selected-panel .resource .actions {
+  align-self: flex-end;
+}
 .search { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0 10px; margin-bottom: 12px; }
 .search input { border: 0; padding-left: 0; }
 .search input:focus { outline: none; }
@@ -220,7 +248,7 @@ pre { margin: 0; white-space: pre-wrap; overflow: auto; max-height: 520px; backg
   .inline { flex-direction: column; }
   .hero-action-buttons { justify-content: flex-start; }
   .add-split-form .inline { grid-template-columns: 1fr; }
-  .split { width: 100%; }
+  .split { width: 100%; max-width: none; }
 }
 
 @media (max-width: 640px) {
