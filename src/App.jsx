@@ -6,7 +6,7 @@ import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalo
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
 import { buildWorkspace, downloadJsonFile, parseWorkspace } from './lib/workspace.js';
-import { buildDependencyTreeUrl, cacheDependencyTreeVersionOptions, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
+import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
 const DEFAULT_NO_SYNC_RESOURCES = defaultExcludes;
@@ -82,7 +82,6 @@ function buildCoreSplit(resourceTypes, noSyncResources) {
 
 export default function App() {
   const [resourceCatalog, setResourceCatalog] = useState(BUNDLED_RESOURCE_CATALOG);
-  const [resourceCatalogInfo, setResourceCatalogInfo] = useState({ source: 'bundled', version: null, error: null });
   const [selectedCatalogVersion, setSelectedCatalogVersion] = useState(LATEST_DEPENDENCY_TREE_VERSION);
   const [catalogVersionOptions, setCatalogVersionOptions] = useState(() => getCachedDependencyTreeVersionOptions() || [LATEST_DEPENDENCY_TREE_VERSION]);
   const [splits, setSplits] = useState(() => [buildCoreSplit(BUNDLED_RESOURCE_CATALOG.resourceTypes, DEFAULT_NO_SYNC_RESOURCES)]);
@@ -100,6 +99,34 @@ export default function App() {
   useEffect(() => {
     noSyncResourcesRef.current = noSyncResources;
   }, [noSyncResources]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCatalogVersions() {
+      const cachedOptions = getCachedDependencyTreeVersionOptions();
+      if (cachedOptions) return;
+      try {
+        const response = await fetch(DEPENDENCY_TREE_INDEX_URL, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Dependency catalog index request failed: ${response.status}`);
+        }
+
+        const options = buildDependencyTreeVersionOptionsFromIndex(await response.json());
+        setCatalogVersionOptions(cacheDependencyTreeVersionOptions(options));
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+      }
+    }
+
+    loadCatalogVersions();
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -125,11 +152,6 @@ export default function App() {
         const filteredNoSyncResources = noSyncResourcesRef.current.filter(resource => knownResourceSet.has(resource));
 
         setResourceCatalog(catalog);
-        setResourceCatalogInfo({ source: 'live', version: catalog.version || null, error: null });
-
-        if (selectedCatalogVersion === LATEST_DEPENDENCY_TREE_VERSION && catalog.version) {
-          setCatalogVersionOptions(cacheDependencyTreeVersionOptions(catalog.version));
-        }
 
         setNoSyncResources(filteredNoSyncResources);
         setSplits(current => {
@@ -154,7 +176,6 @@ export default function App() {
       } catch (error) {
         if (error.name === 'AbortError') return;
         setResourceCatalog(BUNDLED_RESOURCE_CATALOG);
-        setResourceCatalogInfo({ source: 'bundled', version: null, error: error.message });
       }
     }
 

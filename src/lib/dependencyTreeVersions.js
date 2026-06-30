@@ -1,6 +1,7 @@
 export const MIN_DEPENDENCY_TREE_VERSION = '1.60.0';
 export const LATEST_DEPENDENCY_TREE_VERSION = 'latest';
 export const DEPENDENCY_TREE_BASE_URL = 'https://cxascode.github.io/dependency-tree-merged-json';
+export const DEPENDENCY_TREE_INDEX_URL = `${DEPENDENCY_TREE_BASE_URL}/index.json`;
 const DEPENDENCY_TREE_VERSION_CACHE_KEY = 'orgsync-split-modeler-dependency-tree-version-cache';
 const DEPENDENCY_TREE_VERSION_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -20,6 +21,51 @@ function parseVersion(version) {
 
   const [major, minor, patch] = parts;
   return { major, minor, patch };
+}
+
+function compareParsedVersions(a, b) {
+  if (a.major !== b.major) return a.major - b.major;
+  if (a.minor !== b.minor) return a.minor - b.minor;
+  return a.patch - b.patch;
+}
+
+function compareVersionsDescending(left, right) {
+  const parsedLeft = parseVersion(left);
+  const parsedRight = parseVersion(right);
+
+  if (!parsedLeft && !parsedRight) return 0;
+  if (!parsedLeft) return 1;
+  if (!parsedRight) return -1;
+
+  return compareParsedVersions(parsedRight, parsedLeft);
+}
+
+function isAtLeastVersion(version, minVersion) {
+  const parsedVersion = parseVersion(version);
+  const parsedMinVersion = parseVersion(minVersion);
+
+  if (!parsedVersion || !parsedMinVersion) return false;
+
+  return compareParsedVersions(parsedVersion, parsedMinVersion) >= 0;
+}
+
+function extractVersion(value) {
+  if (typeof value === 'string') {
+    return value.replace(/\.json$/, '').replace(/^v/, '');
+  }
+
+  if (!value || typeof value !== 'object') return null;
+
+  return value.version || value.name || value.tag || null;
+}
+
+function getIndexEntries(index) {
+  if (Array.isArray(index)) return index;
+  if (Array.isArray(index?.versions)) return index.versions;
+  if (Array.isArray(index?.files)) return index.files;
+  if (Array.isArray(index?.items)) return index.items;
+
+  return [];
 }
 
 export function normalizeDependencyTreeVersion(version) {
@@ -48,6 +94,18 @@ export function buildDependencyTreeVersionOptions(latestVersion, minVersion = MI
   return [LATEST_DEPENDENCY_TREE_VERSION, ...versions];
 }
 
+export function buildDependencyTreeVersionOptionsFromIndex(index, minVersion = MIN_DEPENDENCY_TREE_VERSION) {
+  const versions = getIndexEntries(index)
+    .map(extractVersion)
+    .filter(Boolean)
+    .map(normalizeDependencyTreeVersion)
+    .filter(version => version !== LATEST_DEPENDENCY_TREE_VERSION)
+    .filter(version => isAtLeastVersion(version, minVersion))
+    .sort(compareVersionsDescending);
+
+  return [LATEST_DEPENDENCY_TREE_VERSION, ...new Set(versions)];
+}
+
 export function getCachedDependencyTreeVersionOptions(now = Date.now()) {
   if (typeof window === 'undefined') return null;
 
@@ -63,7 +121,9 @@ export function getCachedDependencyTreeVersionOptions(now = Date.now()) {
 }
 
 export function cacheDependencyTreeVersionOptions(latestVersion, now = Date.now()) {
-  const options = buildDependencyTreeVersionOptions(latestVersion);
+  const options = Array.isArray(latestVersion)
+    ? [...new Set(latestVersion)]
+    : buildDependencyTreeVersionOptions(latestVersion);
 
   if (typeof window !== 'undefined') {
     try {
