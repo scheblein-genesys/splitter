@@ -8,7 +8,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { cursor: pointer; border: 0; border-radius: 12px; padding: 10px 12px; background: #1d4ed8; color: white; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
 button:hover { filter: brightness(0.97); }
 button:disabled { cursor: not-allowed; opacity: 0.55; filter: none; }
@@ -16,7 +16,8 @@ button.secondary { background: #0f172a; }
 button.ghost { background: #eef2ff; color: #1e293b; }
 button.danger, .danger { color: #b91c1c; }
 button.ghost.danger { background: #fff1f2; }
-input { width: 100%; border: 1px solid #d7deea; border-radius: 12px; padding: 10px 12px; background: white; color: #172033; }
+input, select { width: 100%; border: 1px solid #d7deea; border-radius: 12px; padding: 10px 12px; background: white; color: #172033; }
+select { cursor: pointer; }
 code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
 
 .app { max-width: 1440px; margin: 0 auto; padding: 28px; }
@@ -26,11 +27,41 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 54px); line-height: 1.02; max-width:
 .subhead { color: #526071; font-size: 18px; line-height: 1.5; max-width: 950px; }
 .card { background: rgba(255,255,255,.86); border: 1px solid #e2e8f0; box-shadow: 0 16px 40px rgba(15,23,42,.06); border-radius: 22px; padding: 18px; }
 .split-nav { margin-bottom: 18px; }
+.split-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.catalog-version-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.catalog-version-row label {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.catalog-version-select {
+  width: auto;
+  min-width: 132px;
+  padding: 6px 28px 6px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
 .hero-actions {
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 .hero-action-buttons {
@@ -46,7 +77,7 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 54px); line-height: 1.02; max-width:
 .hero-stats {
   display: grid;
   gap: 10px;
-  margin-top: 44px;
+  margin-top: 0;
 }
 .hero-stats .stat-button {
   min-height: 82px;
@@ -254,4 +285,6 @@ pre { margin: 0; white-space: pre-wrap; overflow: auto; max-height: 520px; backg
 
 @media (max-width: 640px) {
   .stats-grid { grid-template-columns: 1fr; }
+  .catalog-version-row { justify-content: flex-start; }
+  .catalog-version-select { flex: 1; width: 100%; }
 }

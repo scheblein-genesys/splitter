@@ -6,8 +6,8 @@ import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalo
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
 import { buildWorkspace, downloadJsonFile, parseWorkspace } from './lib/workspace.js';
+import { buildDependencyTreeUrl, cacheDependencyTreeVersionOptions, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
-const RESOURCE_CATALOG_URL = 'https://cxascode.github.io/dependency-tree-json/latest-merged.json';
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
 const DEFAULT_NO_SYNC_RESOURCES = defaultExcludes;
 
@@ -83,6 +83,8 @@ function buildCoreSplit(resourceTypes, noSyncResources) {
 export default function App() {
   const [resourceCatalog, setResourceCatalog] = useState(BUNDLED_RESOURCE_CATALOG);
   const [resourceCatalogInfo, setResourceCatalogInfo] = useState({ source: 'bundled', version: null, error: null });
+  const [selectedCatalogVersion, setSelectedCatalogVersion] = useState(LATEST_DEPENDENCY_TREE_VERSION);
+  const [catalogVersionOptions, setCatalogVersionOptions] = useState(() => getCachedDependencyTreeVersionOptions() || [LATEST_DEPENDENCY_TREE_VERSION]);
   const [splits, setSplits] = useState(() => [buildCoreSplit(BUNDLED_RESOURCE_CATALOG.resourceTypes, DEFAULT_NO_SYNC_RESOURCES)]);
   const [noSyncResources, setNoSyncResources] = useState(DEFAULT_NO_SYNC_RESOURCES);
   const [selectedSplitId, setSelectedSplitId] = useState('core');
@@ -91,15 +93,20 @@ export default function App() {
   const [resourceDialogType, setResourceDialogType] = useState(null);
   const [query, setQuery] = useState('');
   const importInputRef = useRef(null);
+  const noSyncResourcesRef = useRef(noSyncResources);
 
   const allResources = resourceCatalog.resourceTypes;
+
+  useEffect(() => {
+    noSyncResourcesRef.current = noSyncResources;
+  }, [noSyncResources]);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadResourceCatalog() {
       try {
-        const response = await fetch(RESOURCE_CATALOG_URL, {
+        const response = await fetch(buildDependencyTreeUrl(selectedCatalogVersion), {
           cache: 'no-store',
           signal: controller.signal,
         });
@@ -114,21 +121,35 @@ export default function App() {
           throw new Error('Resource catalog did not contain any resource types.');
         }
 
+        const knownResourceSet = new Set(catalog.resourceTypes);
+        const filteredNoSyncResources = noSyncResourcesRef.current.filter(resource => knownResourceSet.has(resource));
+
         setResourceCatalog(catalog);
         setResourceCatalogInfo({ source: 'live', version: catalog.version || null, error: null });
-        setSplits(current => {
-          const focusedSelected = new Set(current
-            .filter(split => split.kind === 'focused')
-            .flatMap(split => getSplitResources(split)));
 
-          return current.map(split => split.kind === 'default'
-            ? {
+        if (selectedCatalogVersion === LATEST_DEPENDENCY_TREE_VERSION && catalog.version) {
+          setCatalogVersionOptions(cacheDependencyTreeVersionOptions(catalog.version));
+        }
+
+        setNoSyncResources(filteredNoSyncResources);
+        setSplits(current => {
+          const focusedSplits = current
+            .filter(split => split.kind === 'focused')
+            .map(split => ({
               ...split,
-              selectedResources: catalog.resourceTypes
-                .filter(resource => !DEFAULT_NO_SYNC_RESOURCES.includes(resource))
-                .filter(resource => !focusedSelected.has(resource)),
-            }
-            : split);
+              selectedResources: getSplitResources(split).filter(resource => knownResourceSet.has(resource)),
+            }));
+
+          const focusedSelected = new Set(focusedSplits.flatMap(split => getSplitResources(split)));
+          const coreSplit = current.find(split => split.kind === 'default') || buildCoreSplit(catalog.resourceTypes, filteredNoSyncResources);
+          const nextCoreSplit = {
+            ...coreSplit,
+            selectedResources: catalog.resourceTypes
+              .filter(resource => !filteredNoSyncResources.includes(resource))
+              .filter(resource => !focusedSelected.has(resource)),
+          };
+
+          return [nextCoreSplit, ...focusedSplits];
         });
       } catch (error) {
         if (error.name === 'AbortError') return;
@@ -140,7 +161,7 @@ export default function App() {
     loadResourceCatalog();
 
     return () => controller.abort();
-  }, []);
+  }, [selectedCatalogVersion]);
 
   const selectedSplit = splits.find(split => split.id === selectedSplitId) || { id: null, name: 'no split', kind: 'focused', selectedResources: [] };
   const selectedSplitResources = getSplitResources(selectedSplit);
@@ -389,7 +410,9 @@ export default function App() {
         <section className="card split-nav">
           <div className="section-title">
             <div><h2>Splits</h2><p>Select core or a focused split to review and move resources.</p></div>
-            {!isAddingSplit && <button onClick={startAddingSplit}><Plus size={16}/> Add focused split</button>}
+            <div className="split-nav-actions">
+              {!isAddingSplit && <button onClick={startAddingSplit}><Plus size={16}/> Add focused split</button>}
+            </div>
           </div>
           {isAddingSplit && <div className="field add-split-form">
             <label>Add focused split</label>
@@ -413,6 +436,12 @@ export default function App() {
           <button className="ghost" onClick={() => importInputRef.current?.click()}><Upload size={16}/> Import</button>
           <button className="secondary" onClick={downloadWorkspace} disabled={splits.length === 0} title={splits.length === 0 ? 'Create a split before exporting a workspace.' : 'Export workspace JSON'}><Download size={16}/> Export</button>
           <button className="ghost" onClick={reset}><RotateCcw size={16}/> Reset</button>
+        </div>
+        <div className="catalog-version-row">
+          <label htmlFor="catalog-version-select">Version:</label>
+          <select id="catalog-version-select" className="catalog-version-select" aria-label="Dependency catalog version" value={selectedCatalogVersion} onChange={event => setSelectedCatalogVersion(event.target.value)}>
+            {catalogVersionOptions.map(version => <option key={version} value={version}>{getDependencyTreeVersionLabel(version)}</option>)}
+          </select>
         </div>
         <div className="hero-stats">
           <button className="stat-card mini-stat stat-button" onClick={() => setResourceDialogType('known')}>
