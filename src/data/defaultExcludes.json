@@ -13,14 +13,14 @@
   "genesyscloud_idp_ping",
   "genesyscloud_idp_salesforce",
   "genesyscloud_integration_action_draft",
+  "genesyscloud_integration_credential",
   "genesyscloud_integration_custom_auth_action",
   "genesyscloud_oauth_client",
   "genesyscloud_organization_authentication_settings",
   "genesyscloud_outbound_settings",
   "genesyscloud_routing_settings",
   "genesyscloud_routing_sms_address",
-  "genesyscloud_telephony_providers_edges_trunk",
-  "genesyscloud_integration_credential",
   "genesyscloud_telephony_providers_edges_edge_group",
+  "genesyscloud_telephony_providers_edges_trunk",
   "genesyscloud_telephony_providers_edges_trunkbasesettings"
 ]
