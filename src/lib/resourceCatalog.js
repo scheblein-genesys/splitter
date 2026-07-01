@@ -1,4 +1,11 @@
+const EXCLUDED_RESOURCE_TYPES = new Set([
+  'genesyscloud_bcp_tf_exporter',
+  'genesyscloud_tf_export',
+]);
 
+function isIncludedResourceType(type) {
+  return type && !EXCLUDED_RESOURCE_TYPES.has(type);
+}
 
 export function parseResourceCatalog(catalog) {
   const entries = Array.isArray(catalog?.resources) ? catalog.resources : [];
@@ -9,7 +16,7 @@ export function parseResourceCatalog(catalog) {
       type: resource.type,
       dependencies: Array.isArray(resource.dependencies) ? resource.dependencies : [],
     }))
-    .filter(resource => resource.type)
+    .filter(resource => isIncludedResourceType(resource.type))
     .sort((left, right) => left.type.localeCompare(right.type));
 
   return buildResourceCatalog({
@@ -38,7 +45,7 @@ export function buildResourceCatalog({ version = null, resources = [] }) {
 export function buildFallbackCatalog(resourceTypes) {
   return buildResourceCatalog({
     version: null,
-    resources: resourceTypes.map(type => ({
+    resources: resourceTypes.filter(isIncludedResourceType).map(type => ({
       name: type,
       type,
       dependencies: [],
