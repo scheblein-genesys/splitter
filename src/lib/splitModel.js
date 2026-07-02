@@ -18,9 +18,10 @@ function isCoreSplit(split) {
 
 export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [] }) {
   const resourceTypes = resources;
-  const effectiveNoSyncSet = noSyncSet || new Set(noSyncResources);
-  const effectiveNoSyncResources = uniqueSorted(noSyncResources || [...effectiveNoSyncSet]);
   const coreExcludeFilterResourceExcludeSet = new Set(coreExcludeFilterResourceExcludes);
+  const effectiveNoSyncSet = noSyncSet || new Set(noSyncResources);
+  const effectiveNoSyncResources = uniqueSorted(noSyncResources || [...effectiveNoSyncSet])
+    .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource));
   const configuredCoreSplit = splits.find(isCoreSplit);
   const focusedSplits = splits.filter(split => !isCoreSplit(split));
 

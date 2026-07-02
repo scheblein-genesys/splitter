@@ -1,4 +1,5 @@
 [
   "genesyscloud_journey_outcome",
-  "genesyscloud_journey_outcome_predictor"
+  "genesyscloud_journey_outcome_predictor",
+  "genesyscloud_routing_settings"
 ]
