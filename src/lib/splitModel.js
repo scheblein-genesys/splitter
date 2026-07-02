@@ -16,10 +16,11 @@ function isCoreSplit(split) {
   return split.kind === 'default';
 }
 
-export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation }) {
+export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [] }) {
   const resourceTypes = resources;
   const effectiveNoSyncSet = noSyncSet || new Set(noSyncResources);
   const effectiveNoSyncResources = uniqueSorted(noSyncResources || [...effectiveNoSyncSet]);
+  const coreExcludeFilterResourceExcludeSet = new Set(coreExcludeFilterResourceExcludes);
   const configuredCoreSplit = splits.find(isCoreSplit);
   const focusedSplits = splits.filter(split => !isCoreSplit(split));
 
@@ -49,7 +50,8 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
   const coreFirstLevelDependencySet = new Set(coreFirstLevelDependencies);
   const coreFocusedDependencyResources = focusedSelectedResources.filter(resource => coreFirstLevelDependencySet.has(resource));
   const coreFocusedFilterResources = focusedSelectedResources.filter(resource => !coreFirstLevelDependencySet.has(resource));
-  const coreExcludeFilterResources = uniqueSorted(coreFocusedFilterResources);
+  const coreExcludeFilterResources = uniqueSorted(coreFocusedFilterResources)
+    .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource));
   const coreExcludeResources = uniqueSorted([
     ...effectiveNoSyncResources,
     ...coreFocusedDependencyResources,

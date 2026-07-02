@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Trash2, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search } from 'lucide-react';
 import resources from './data/resources.json';
-import defaultExcludes from './data/defaultExcludes.json';
+import defaultCSVExcludes from './data/defaultCSVExcludes.json';
+import defaultTFExcludes from './data/defaultTFExcludes.json';
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
@@ -9,7 +10,8 @@ import { buildWorkspace, downloadJsonFile, parseWorkspace } from './lib/workspac
 import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
-const DEFAULT_NO_SYNC_RESOURCES = defaultExcludes;
+const DEFAULT_CSV_EXCLUDE_RESOURCES = defaultCSVExcludes;
+const DEFAULT_TF_EXCLUDE_RESOURCES = defaultTFExcludes;
 
 function formatTerraformResourceList(values) {
   return values.map(value => `    "${value}"`).join(',\n');
@@ -84,8 +86,8 @@ export default function App() {
   const [resourceCatalog, setResourceCatalog] = useState(BUNDLED_RESOURCE_CATALOG);
   const [selectedCatalogVersion, setSelectedCatalogVersion] = useState(LATEST_DEPENDENCY_TREE_VERSION);
   const [catalogVersionOptions, setCatalogVersionOptions] = useState(() => getCachedDependencyTreeVersionOptions() || [LATEST_DEPENDENCY_TREE_VERSION]);
-  const [splits, setSplits] = useState(() => [buildCoreSplit(BUNDLED_RESOURCE_CATALOG.resourceTypes, DEFAULT_NO_SYNC_RESOURCES)]);
-  const [noSyncResources, setNoSyncResources] = useState(DEFAULT_NO_SYNC_RESOURCES);
+  const [splits, setSplits] = useState(() => [buildCoreSplit(BUNDLED_RESOURCE_CATALOG.resourceTypes, DEFAULT_CSV_EXCLUDE_RESOURCES)]);
+  const [noSyncResources, setNoSyncResources] = useState(DEFAULT_CSV_EXCLUDE_RESOURCES);
   const [selectedSplitId, setSelectedSplitId] = useState('core');
   const [newSplitName, setNewSplitName] = useState('');
   const [isAddingSplit, setIsAddingSplit] = useState(false);
@@ -269,6 +271,7 @@ export default function App() {
       noSyncSet,
       stats,
       validation,
+      coreExcludeFilterResourceExcludes: DEFAULT_TF_EXCLUDE_RESOURCES,
     });
   }, [assigned, noSyncResources, noSyncSet, splits, stats, validation, allResources, resourceCatalog.dependencyMap]);
 
@@ -371,8 +374,8 @@ export default function App() {
   }
 
   function reset() {
-    setNoSyncResources(DEFAULT_NO_SYNC_RESOURCES);
-    setSplits([buildCoreSplit(allResources, DEFAULT_NO_SYNC_RESOURCES)]);
+    setNoSyncResources(DEFAULT_CSV_EXCLUDE_RESOURCES);
+    setSplits([buildCoreSplit(allResources, DEFAULT_CSV_EXCLUDE_RESOURCES)]);
     setSelectedSplitId('core');
     setNewSplitName('');
     setIsAddingSplit(false);
