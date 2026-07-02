@@ -51,8 +51,10 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
   const coreFirstLevelDependencySet = new Set(coreFirstLevelDependencies);
   const coreFocusedDependencyResources = focusedSelectedResources.filter(resource => coreFirstLevelDependencySet.has(resource));
   const coreFocusedFilterResources = focusedSelectedResources.filter(resource => !coreFirstLevelDependencySet.has(resource));
-  const coreExcludeFilterResources = uniqueSorted(coreFocusedFilterResources)
-    .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource));
+  const coreExcludeFilterResources = uniqueSorted([
+    ...coreFocusedFilterResources,
+    ...coreExcludeFilterResourceExcludes,
+  ]);
   const coreExcludeResources = uniqueSorted([
     ...effectiveNoSyncResources,
     ...coreFocusedDependencyResources,
