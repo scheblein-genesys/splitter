@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy } from 'lucide-react';
 import resources from './data/resources.json';
 import defaultCSVExcludes from './data/defaultCSVExcludes.json';
 import defaultTFExcludes from './data/defaultTFExcludes.json';
@@ -101,6 +101,7 @@ export default function App() {
   const [isAddingSplit, setIsAddingSplit] = useState(false);
   const [resourceDialogType, setResourceDialogType] = useState(null);
   const [query, setQuery] = useState('');
+  const [copiedOutput, setCopiedOutput] = useState(null);
   const importInputRef = useRef(null);
   const noSyncResourcesRef = useRef(noSyncResources);
 
@@ -436,6 +437,16 @@ export default function App() {
     reader.readAsText(file);
   }
 
+  async function copyGeneratedOutput(key, value) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedOutput(key);
+      window.setTimeout(() => setCopiedOutput(current => current === key ? null : current), 1500);
+    } catch {
+      window.alert('Unable to copy to clipboard. Select the text and copy it manually.');
+    }
+  }
+
   return <div className="app">
     <header className="hero">
       <div>
@@ -550,17 +561,26 @@ export default function App() {
           </div>
 
           <div className="generated-file">
-            <h3>source_export_template.tf</h3>
+            <div className="generated-file-header">
+              <h3>source_export_template.tf</h3>
+              <button className="ghost copy-button" onClick={() => copyGeneratedOutput('source_export_template.tf', selectedSourceExportTemplate)} title="Copy source_export_template.tf to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'source_export_template.tf' ? 'Copied' : 'Copy'}</button>
+            </div>
             <pre>{selectedSourceExportTemplate}</pre>
           </div>
 
           <div className="generated-file">
-            <h3>exclude_resources.csv</h3>
+            <div className="generated-file-header">
+              <h3>exclude_resources.csv</h3>
+              <button className="ghost copy-button" onClick={() => copyGeneratedOutput('exclude_resources.csv', selectedExcludeResourcesCsv)} title="Copy exclude_resources.csv to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'exclude_resources.csv' ? 'Copied' : 'Copy'}</button>
+            </div>
             <pre>{selectedExcludeResourcesCsv}</pre>
           </div>
 
           <div className="generated-file">
-            <h3>configs.json</h3>
+            <div className="generated-file-header">
+              <h3>configs.json</h3>
+              <button className="ghost copy-button" onClick={() => copyGeneratedOutput('configs.json', selectedConfigsJson)} title="Copy configs.json to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'configs.json' ? 'Copied' : 'Copy'}</button>
+            </div>
             <pre>{selectedConfigsJson}</pre>
           </div>
         </section>

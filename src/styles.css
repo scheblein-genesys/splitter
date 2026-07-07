@@ -246,8 +246,10 @@ h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: upper
 }
 .output { margin-top: 0; }
 .generated-file + .generated-file { margin-top: 18px; }
-.generated-file h3 { margin-top: 0; }
+.generated-file-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.generated-file h3 { margin: 0; }
 .generated-file pre { max-height: 360px; }
+.copy-button { padding: 6px 10px; font-size: 12px; border-radius: 10px; flex-shrink: 0; }
 pre { margin: 0; white-space: pre; overflow: auto; max-height: 520px; background: #0f172a; color: #e2e8f0; border-radius: 16px; padding: 16px; font-size: 12px; line-height: 1.5; }
 
 .dialog-backdrop {
