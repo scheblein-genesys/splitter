@@ -68,6 +68,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     includeFilterResources: coreExportResources,
     excludeFilterResources: coreExcludeFilterResources,
     excludeResources: coreExcludeResources,
+    autoReplaceResourceList: focusedSelectedResources,
     useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(coreSelectedResources, coreFirstLevelDependencies),
   };
 
@@ -92,6 +93,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
       firstLevelDependencies,
       includeFilterResources: exportResources,
       excludeResources,
+      autoReplaceResourceList: firstLevelDependencies,
       useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(selectedResources, firstLevelDependencies),
     };
   });

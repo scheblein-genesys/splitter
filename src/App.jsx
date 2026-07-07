@@ -71,6 +71,14 @@ function buildExcludeResourcesCsv(excludeResources = []) {
   return ['name', ...excludeResources].join('\n');
 }
 
+function buildConfigsJson(autoReplaceResourceList = []) {
+  return `{
+  ...
+  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
+  ...
+}`;
+}
+
 function buildCoreSplit(resourceTypes, noSyncResources) {
   const noSyncSet = new Set(noSyncResources);
 
@@ -285,6 +293,10 @@ export default function App() {
 
   const selectedExcludeResourcesCsv = useMemo(() => {
     return buildExcludeResourcesCsv(selectedGeneratedSplit?.excludeResources || []);
+  }, [selectedGeneratedSplit]);
+
+  const selectedConfigsJson = useMemo(() => {
+    return buildConfigsJson(selectedGeneratedSplit?.autoReplaceResourceList || []);
   }, [selectedGeneratedSplit]);
 
   function startAddingSplit() {
@@ -545,6 +557,11 @@ export default function App() {
           <div className="generated-file">
             <h3>exclude_resources.csv</h3>
             <pre>{selectedExcludeResourcesCsv}</pre>
+          </div>
+
+          <div className="generated-file">
+            <h3>configs.json</h3>
+            <pre>{selectedConfigsJson}</pre>
           </div>
         </section>
       </main>
