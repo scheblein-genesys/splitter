@@ -81,14 +81,17 @@ function buildConfigsJson(autoReplaceResourceList = []) {
 }`;
 }
 
-function buildCoreSplit(resourceTypes, noSyncResources) {
+function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEFAULT_TF_EXCLUDE_RESOURCES) {
   const noSyncSet = new Set(noSyncResources);
+  const tfExcludeSet = new Set(tfExcludeResources);
 
   return {
     id: 'core',
     name: 'core',
     kind: 'default',
-    selectedResources: resourceTypes.filter(resource => !noSyncSet.has(resource)),
+    selectedResources: resourceTypes
+      .filter(resource => !noSyncSet.has(resource))
+      .filter(resource => !tfExcludeSet.has(resource)),
   };
 }
 
@@ -162,6 +165,7 @@ export default function App() {
         }
 
         const knownResourceSet = new Set(catalog.resourceTypes);
+        const coreTfExcludeSet = new Set(DEFAULT_TF_EXCLUDE_RESOURCES);
         const filteredNoSyncResources = noSyncResourcesRef.current.filter(resource => knownResourceSet.has(resource));
 
         setResourceCatalog(catalog);
@@ -181,7 +185,8 @@ export default function App() {
             ...coreSplit,
             selectedResources: catalog.resourceTypes
               .filter(resource => !filteredNoSyncResources.includes(resource))
-              .filter(resource => !focusedSelected.has(resource)),
+              .filter(resource => !focusedSelected.has(resource))
+              .filter(resource => !coreTfExcludeSet.has(resource)),
           };
 
           return [nextCoreSplit, ...focusedSplits];
@@ -219,7 +224,7 @@ export default function App() {
       assigned,
       noSyncSet,
       query,
-    });
+    }).filter(resource => !DEFAULT_TF_EXCLUDE_RESOURCES.includes(resource));
   }, [assigned, noSyncSet, query, allResources, selectedSplit.kind, selectedSplitResources, coreSplit]);
 
   const stats = useMemo(() => {

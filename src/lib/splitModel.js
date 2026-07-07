@@ -37,10 +37,12 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     ? getSplitResources(configuredCoreSplit)
       .filter(resource => !effectiveNoSyncSet.has(resource))
       .filter(resource => !focusedSelectedSet.has(resource))
+      .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource))
       .sort()
     : resourceTypes
       .filter(resource => !effectiveNoSyncSet.has(resource))
       .filter(resource => !focusedSelectedSet.has(resource))
+      .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource))
       .sort();
 
   const coreFirstLevelDependencies = getFirstLevelDependencies({
