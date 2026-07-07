@@ -16,8 +16,13 @@ function isCoreSplit(split) {
   return split.kind === 'default';
 }
 
-export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [] }) {
+function getSupportedAutoReplaceResources(resources, supportedAutoReplaceResourceSet) {
+  return uniqueSorted(resources).filter(resource => supportedAutoReplaceResourceSet.has(resource));
+}
+
+export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [], supportedAutoReplaceResources = [] }) {
   const resourceTypes = resources;
+  const supportedAutoReplaceResourceSet = new Set(supportedAutoReplaceResources);
   const coreExcludeFilterResourceExcludeSet = new Set(coreExcludeFilterResourceExcludes);
   const effectiveNoSyncSet = noSyncSet || new Set(noSyncResources);
   const effectiveNoSyncResources = uniqueSorted(noSyncResources || [...effectiveNoSyncSet])
@@ -68,7 +73,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     includeFilterResources: coreExportResources,
     excludeFilterResources: coreExcludeFilterResources,
     excludeResources: coreExcludeResources,
-    autoReplaceResourceList: focusedSelectedResources,
+    autoReplaceResourceList: getSupportedAutoReplaceResources(coreFocusedDependencyResources, supportedAutoReplaceResourceSet),
     useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(coreSelectedResources, coreFirstLevelDependencies),
   };
 
@@ -93,7 +98,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
       firstLevelDependencies,
       includeFilterResources: exportResources,
       excludeResources,
-      autoReplaceResourceList: firstLevelDependencies,
+      autoReplaceResourceList: getSupportedAutoReplaceResources(firstLevelDependencies, supportedAutoReplaceResourceSet),
       useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(selectedResources, firstLevelDependencies),
     };
   });

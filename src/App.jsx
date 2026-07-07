@@ -3,6 +3,7 @@ import { Plus, Trash2, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Se
 import resources from './data/resources.json';
 import defaultCSVExcludes from './data/defaultCSVExcludes.json';
 import defaultTFExcludes from './data/defaultTFExcludes.json';
+import supportedAutoReplaceResources from './data/supportedAutoReplaceResources.json';
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
@@ -12,6 +13,7 @@ import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cac
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
 const DEFAULT_CSV_EXCLUDE_RESOURCES = defaultCSVExcludes;
 const DEFAULT_TF_EXCLUDE_RESOURCES = defaultTFExcludes;
+const SUPPORTED_AUTO_REPLACE_RESOURCES = supportedAutoReplaceResources;
 
 function formatTerraformResourceList(values) {
   return values.map(value => `    "${value}"`).join(',\n');
@@ -281,6 +283,7 @@ export default function App() {
       stats,
       validation,
       coreExcludeFilterResourceExcludes: DEFAULT_TF_EXCLUDE_RESOURCES,
+      supportedAutoReplaceResources: SUPPORTED_AUTO_REPLACE_RESOURCES,
     });
   }, [assigned, noSyncResources, noSyncSet, splits, stats, validation, allResources, resourceCatalog.dependencyMap]);
 

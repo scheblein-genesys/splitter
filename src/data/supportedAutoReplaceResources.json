@@ -1,0 +1,23 @@
+[
+  "genesyscloud_user",
+  "genesyscloud_auth_division",
+  "genesyscloud_auth_role",
+  "genesyscloud_routing_queue",
+  "genesyscloud_routing_skill",
+  "genesyscloud_routing_language",
+  "genesyscloud_routing_utilization_label",
+  "genesyscloud_telephony_providers_edges_site",
+  "genesyscloud_telephony_providers_edges_phonebasesettings",
+  "genesyscloud_location",
+  "genesyscloud_routing_wrapupcode",
+  "genesyscloud_group",
+  "genesyscloud_architect_user_prompt",
+  "genesyscloud_script",
+  "genesyscloud_architect_emergencygroup",
+  "genesyscloud_integration",
+  "genesyscloud_integration_action",
+  "genesyscloud_architect_datatable",
+  "genesyscloud_team",
+  "genesyscloud_speechandtextanalytics_topic",
+  "genesyscloud_flow"
+]
