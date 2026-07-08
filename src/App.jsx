@@ -74,11 +74,7 @@ function buildExcludeResourcesCsv(excludeResources = []) {
 }
 
 function buildConfigsJson(autoReplaceResourceList = []) {
-  return `{
-  ...
-  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
-  ...
-}`;
+  return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",`;
 }
 
 function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEFAULT_TF_EXCLUDE_RESOURCES) {
@@ -106,6 +102,7 @@ export default function App() {
   const [isAddingSplit, setIsAddingSplit] = useState(false);
   const [resourceDialogType, setResourceDialogType] = useState(null);
   const [query, setQuery] = useState('');
+  const [selectedQuery, setSelectedQuery] = useState('');
   const [copiedOutput, setCopiedOutput] = useState(null);
   const importInputRef = useRef(null);
   const noSyncResourcesRef = useRef(noSyncResources);
@@ -204,6 +201,7 @@ export default function App() {
 
   const selectedSplit = splits.find(split => split.id === selectedSplitId) || { id: null, name: 'no split', kind: 'focused', selectedResources: [] };
   const selectedSplitResources = getSplitResources(selectedSplit);
+  const filteredSelectedSplitResources = selectedSplitResources.filter(resource => resource.includes(selectedQuery));
   const coreSplit = splits.find(split => split.kind === 'default');
   const selectedResources = useMemo(() => [...new Set(splits.flatMap(split => getSplitResources(split)))].sort(), [splits]);
 
@@ -478,7 +476,7 @@ export default function App() {
             </div>
           </div>}
           <div className="split-list">
-            {splits.map(split => <button key={split.id} className={split.id === selectedSplitId ? 'split selected' : 'split'} onClick={() => { setSelectedSplitId(split.id); setQuery(''); }}>
+            {splits.map(split => <button key={split.id} className={split.id === selectedSplitId ? 'split selected' : 'split'} onClick={() => { setSelectedSplitId(split.id); setQuery(''); setSelectedQuery(''); }}>
               <span><strong>{split.name}</strong><small>{getSplitResources(split).length} selected</small></span>
               {split.kind !== 'default' && <Trash2 className="danger" size={16} onClick={event => { event.stopPropagation(); deleteSplit(split.id); }} />}
             </button>)}
@@ -552,14 +550,20 @@ export default function App() {
             <div><h2>{selectedSplit.name}</h2><p>{selectedSplit.kind === 'default' ? 'Baseline resources owned by core.' : 'Resources explicitly selected for this focused split.'}</p></div>
             <strong>{selectedSplitResources.length}</strong>
           </div>
+          <div className="search">
+            <Search size={16}/>
+            <input value={selectedQuery} onChange={event => setSelectedQuery(event.target.value)} placeholder="filter selected resources" />
+            {selectedQuery && <button className="ghost search-clear" onClick={() => setSelectedQuery('')} type="button">clear</button>}
+          </div>
           <div className="resource-list">
-            {selectedSplitResources.map(resource => <div className="resource" key={resource}>
+            {filteredSelectedSplitResources.map(resource => <div className="resource" key={resource}>
               <code>{resource}</code>
               <div className="actions">
-                <button className="ghost" onClick={() => removeFromSplit(resource, selectedSplit.id)}>remove</button>
+                {selectedSplit.kind !== 'default' && <button className="ghost" onClick={() => removeFromSplit(resource, selectedSplit.id)}>remove</button>}
                 <button className="ghost danger" onClick={() => excludeResource(resource)}>exclude</button>
               </div>
             </div>)}
+            {filteredSelectedSplitResources.length === 0 && <p className="empty">No selected resources match that filter.</p>}
           </div>
         </section>
 
