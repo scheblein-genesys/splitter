@@ -20,6 +20,8 @@
   "genesyscloud_outbound_settings",
   "genesyscloud_routing_sms_address",
   "genesyscloud_telephony_providers_edges_edge_group",
+  "genesyscloud_telephony_providers_edges_site_outbound_route",
   "genesyscloud_telephony_providers_edges_trunk",
-  "genesyscloud_telephony_providers_edges_trunkbasesettings"
+  "genesyscloud_telephony_providers_edges_trunkbasesettings",
+  "genesyscloud_workforcemanagement_businessunits"
 ]
