@@ -527,22 +527,37 @@ export default function App() {
 
       <main className="grid">
         <section className="card available-panel">
-          <div className="section-title">
-            <div><h2>{selectedSplit.kind === 'focused' ? 'Core resources available to split' : 'Available resource types'}</h2><p>{selectedSplit.kind === 'focused' ? 'Move resources from core into this focused split.' : 'Not selected and not excluded.'}</p></div>
-            <strong>{availableResources.length}</strong>
-          </div>
-          <div className="search">
-            <Search size={16}/>
-            <input value={query} onChange={event => setQuery(event.target.value)} placeholder="filter e.g. flow, routing, outbound" />
-            {query && <button className="ghost search-clear" onClick={() => setQuery('')} type="button">clear</button>}
-          </div>
-          <div className="resource-list">
-            {availableResources.map(resource => <div className="resource" key={resource}>
-              <code>{resource}</code>
-              <button onClick={() => moveToSplit(resource)} title={`Add to ${selectedSplit.name}`}><ArrowRight size={14}/> add</button>
-            </div>)}
-            {availableResources.length === 0 && <p className="empty">No available resources match that filter.</p>}
-          </div>
+          {selectedSplit.kind === 'default' ? (
+            <div className="section-title">
+              <div>
+                <h2>Excluded resources</h2>
+                <p>
+                  Looking for items you excluded? Click{' '}
+                  <button type="button" className="text-link" onClick={() => setResourceDialogType('excluded')}>here</button>
+                  {' '}to restore them.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="section-title">
+                <div><h2>Core resources available to split</h2><p>Move resources from core into this focused split.</p></div>
+                <strong>{availableResources.length}</strong>
+              </div>
+              <div className="search">
+                <Search size={16}/>
+                <input value={query} onChange={event => setQuery(event.target.value)} placeholder="filter e.g. flow, routing, outbound" />
+                {query && <button className="ghost search-clear" onClick={() => setQuery('')} type="button">clear</button>}
+              </div>
+              <div className="resource-list">
+                {availableResources.map(resource => <div className="resource" key={resource}>
+                  <code>{resource}</code>
+                  <button onClick={() => moveToSplit(resource)} title={`Add to ${selectedSplit.name}`}><ArrowRight size={14}/> add</button>
+                </div>)}
+                {availableResources.length === 0 && <p className="empty">No available resources match that filter.</p>}
+              </div>
+            </>
+          )}
         </section>
 
         <section className="card selected-panel">
