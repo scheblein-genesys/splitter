@@ -74,7 +74,8 @@ function buildExcludeResourcesCsv(excludeResources = []) {
 }
 
 function buildConfigsJson(autoReplaceResourceList = []) {
-  return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",`;
+  return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
+  "CheckExportResourceList": "",`;
 }
 
 function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEFAULT_TF_EXCLUDE_RESOURCES) {
