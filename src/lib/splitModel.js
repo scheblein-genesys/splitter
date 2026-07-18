@@ -66,6 +66,11 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     ...effectiveNoSyncResources,
     ...coreFocusedDependencyResources,
   ]);
+  // Temporary: only exclude resources that support auto-replace.
+  const coreSupportedExcludeResources = getSupportedAutoReplaceResources(
+    coreExcludeResources,
+    supportedAutoReplaceResourceSet,
+  );
 
   const coreModel = {
     name: configuredCoreSplit?.name || 'core',
@@ -74,7 +79,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     firstLevelDependencies: coreFirstLevelDependencies,
     includeFilterResources: coreExportResources,
     excludeFilterResources: coreExcludeFilterResources,
-    excludeResources: coreExcludeResources,
+    excludeResources: coreSupportedExcludeResources,
     autoReplaceResourceList: getSupportedAutoReplaceResources(coreFirstLevelDependencies, supportedAutoReplaceResourceSet),
     useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(coreSelectedResources, coreFirstLevelDependencies),
   };
@@ -92,6 +97,10 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     const selectedSet = new Set(selectedResources);
 
     const excludeResources = exportResources.filter(resource => !selectedSet.has(resource)).sort();
+    const supportedExcludeResources = getSupportedAutoReplaceResources(
+      excludeResources,
+      supportedAutoReplaceResourceSet,
+    );
 
     return {
       name: split.name,
@@ -99,7 +108,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
       selectedResources,
       firstLevelDependencies,
       includeFilterResources: exportResources,
-      excludeResources,
+      excludeResources: supportedExcludeResources,
       autoReplaceResourceList: getSupportedAutoReplaceResources(firstLevelDependencies, supportedAutoReplaceResourceSet),
       useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(selectedResources, firstLevelDependencies),
     };
