@@ -66,8 +66,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     ...effectiveNoSyncResources,
     ...coreFocusedDependencyResources,
   ]);
-  // Temporary: only exclude resources that support auto-replace.
-  const coreSupportedExcludeResources = getSupportedAutoReplaceResources(
+  const coreAutoReplaceExcludeResources = getSupportedAutoReplaceResources(
     coreExcludeResources,
     supportedAutoReplaceResourceSet,
   );
@@ -79,7 +78,8 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     firstLevelDependencies: coreFirstLevelDependencies,
     includeFilterResources: coreExportResources,
     excludeFilterResources: coreExcludeFilterResources,
-    excludeResources: coreSupportedExcludeResources,
+    excludeResources: coreExcludeResources,
+    autoReplaceExcludeResources: coreAutoReplaceExcludeResources,
     autoReplaceResourceList: getSupportedAutoReplaceResources(coreFirstLevelDependencies, supportedAutoReplaceResourceSet),
     useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(coreSelectedResources, coreFirstLevelDependencies),
   };
@@ -97,7 +97,7 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     const selectedSet = new Set(selectedResources);
 
     const excludeResources = exportResources.filter(resource => !selectedSet.has(resource)).sort();
-    const supportedExcludeResources = getSupportedAutoReplaceResources(
+    const autoReplaceExcludeResources = getSupportedAutoReplaceResources(
       excludeResources,
       supportedAutoReplaceResourceSet,
     );
@@ -108,7 +108,8 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
       selectedResources,
       firstLevelDependencies,
       includeFilterResources: exportResources,
-      excludeResources: supportedExcludeResources,
+      excludeResources,
+      autoReplaceExcludeResources,
       autoReplaceResourceList: getSupportedAutoReplaceResources(firstLevelDependencies, supportedAutoReplaceResourceSet),
       useLegacyArchitectFlowExporter: getLegacyArchitectFlowExporter(selectedResources, firstLevelDependencies),
     };

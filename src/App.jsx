@@ -7,7 +7,7 @@ import supportedAutoReplaceResources from './data/supportedAutoReplaceResources.
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
-import { buildWorkspace, downloadJsonFile, parseWorkspace } from './lib/workspace.js';
+import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, parseWorkspace } from './lib/workspace.js';
 import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
@@ -73,9 +73,13 @@ function buildExcludeResourcesCsv(excludeResources = []) {
   return ['name', ...excludeResources].join('\n');
 }
 
-function buildConfigsJson(autoReplaceResourceList = []) {
-  return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
+function buildConfigsJson(autoReplaceResourceList = [], includeAutoReplaceResourceList = true) {
+  if (includeAutoReplaceResourceList) {
+    return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
   "CheckExportResourceList": "",`;
+  }
+
+  return `  "CheckExportResourceList": "",`;
 }
 
 function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEFAULT_TF_EXCLUDE_RESOURCES) {
@@ -86,10 +90,15 @@ function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEF
     id: 'core',
     name: 'core',
     kind: 'default',
+    replaceEntitiesMode: DEFAULT_REPLACE_ENTITIES_MODE,
     selectedResources: resourceTypes
       .filter(resource => !noSyncSet.has(resource))
       .filter(resource => !tfExcludeSet.has(resource)),
   };
+}
+
+function getReplaceEntitiesMode(split) {
+  return split?.replaceEntitiesMode === 'use' ? 'use' : DEFAULT_REPLACE_ENTITIES_MODE;
 }
 
 export default function App() {
@@ -200,7 +209,8 @@ export default function App() {
     return () => controller.abort();
   }, [selectedCatalogVersion]);
 
-  const selectedSplit = splits.find(split => split.id === selectedSplitId) || { id: null, name: 'no split', kind: 'focused', selectedResources: [] };
+  const selectedSplit = splits.find(split => split.id === selectedSplitId) || { id: null, name: 'no split', kind: 'focused', selectedResources: [], replaceEntitiesMode: DEFAULT_REPLACE_ENTITIES_MODE };
+  const selectedReplaceEntitiesMode = getReplaceEntitiesMode(selectedSplit);
   const selectedSplitResources = getSplitResources(selectedSplit);
   const filteredSelectedSplitResources = selectedSplitResources.filter(resource => resource.includes(selectedQuery));
   const coreSplit = splits.find(split => split.kind === 'default');
@@ -300,12 +310,27 @@ export default function App() {
   }, [selectedGeneratedSplit]);
 
   const selectedExcludeResourcesCsv = useMemo(() => {
-    return buildExcludeResourcesCsv(selectedGeneratedSplit?.excludeResources || []);
-  }, [selectedGeneratedSplit]);
+    const excludeResources = selectedReplaceEntitiesMode === 'auto'
+      ? selectedGeneratedSplit?.autoReplaceExcludeResources
+      : selectedGeneratedSplit?.excludeResources;
+
+    return buildExcludeResourcesCsv(excludeResources || []);
+  }, [selectedReplaceEntitiesMode, selectedGeneratedSplit]);
 
   const selectedConfigsJson = useMemo(() => {
-    return buildConfigsJson(selectedGeneratedSplit?.autoReplaceResourceList || []);
-  }, [selectedGeneratedSplit]);
+    return buildConfigsJson(
+      selectedGeneratedSplit?.autoReplaceResourceList || [],
+      selectedReplaceEntitiesMode === 'auto',
+    );
+  }, [selectedReplaceEntitiesMode, selectedGeneratedSplit]);
+
+  function setSelectedSplitReplaceEntitiesMode(mode) {
+    if (!selectedSplit.id) return;
+
+    setSplits(current => current.map(split => split.id === selectedSplit.id
+      ? { ...split, replaceEntitiesMode: mode }
+      : split));
+  }
 
   function startAddingSplit() {
     setNewSplitName('');
@@ -327,6 +352,7 @@ export default function App() {
       id: crypto.randomUUID(),
       name,
       kind: 'focused',
+      replaceEntitiesMode: DEFAULT_REPLACE_ENTITIES_MODE,
       selectedResources: [],
     };
 
@@ -602,6 +628,28 @@ export default function App() {
               <button className="ghost copy-button" onClick={() => copyGeneratedOutput('exclude_resources.csv', selectedExcludeResourcesCsv)} title="Copy exclude_resources.csv to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'exclude_resources.csv' ? 'Copied' : 'Copy'}</button>
             </div>
             <pre>{selectedExcludeResourcesCsv}</pre>
+          </div>
+
+          <div className="generated-file replace-entities-control">
+            <div className="generated-file-header">
+              <h3>Replace Entities</h3>
+              <div className="replace-entities-toggle" role="group" aria-label="Replace entities mode">
+                <button
+                  type="button"
+                  className={selectedReplaceEntitiesMode === 'auto' ? 'active' : undefined}
+                  onClick={() => setSelectedSplitReplaceEntitiesMode('auto')}
+                >
+                  auto
+                </button>
+                <button
+                  type="button"
+                  className={selectedReplaceEntitiesMode === 'use' ? 'active' : undefined}
+                  onClick={() => setSelectedSplitReplaceEntitiesMode('use')}
+                >
+                  use
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="generated-file">

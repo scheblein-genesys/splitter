@@ -1,9 +1,14 @@
 export const WORKSPACE_SCHEMA = 'orgsync-split-modeler';
 export const WORKSPACE_VERSION = 1;
+export const DEFAULT_REPLACE_ENTITIES_MODE = 'auto';
 
 function getWorkspaceSplitKind(split) {
   if (split.kind === 'default' || split.kind === 'focused') return split.kind;
   throw new Error('INVALID_SPLIT_KIND');
+}
+
+function parseReplaceEntitiesMode(value) {
+  return value === 'use' ? 'use' : DEFAULT_REPLACE_ENTITIES_MODE;
 }
 
 export function buildWorkspace({ splits, noSyncResources, model }) {
@@ -20,6 +25,7 @@ export function buildWorkspace({ splits, noSyncResources, model }) {
         selectedResources: Array.isArray(split.selectedResources) ? split.selectedResources : [],
         firstLevelDependencies: generatedSplit?.firstLevelDependencies || [],
         excludeResources: generatedSplit?.excludeResources || [],
+        replaceEntitiesMode: parseReplaceEntitiesMode(split.replaceEntitiesMode),
       };
 
       if (kind === 'default') {
@@ -77,6 +83,7 @@ export function parseWorkspace({ rawText, knownResources, cleanName, createId })
         name,
         kind,
         selectedResources,
+        replaceEntitiesMode: parseReplaceEntitiesMode(split.replaceEntitiesMode),
       };
     })
     .filter(split => {
