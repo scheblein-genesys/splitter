@@ -20,6 +20,13 @@ function getSupportedAutoReplaceResources(resources, supportedAutoReplaceResourc
   return uniqueSorted(resources).filter(resource => supportedAutoReplaceResourceSet.has(resource));
 }
 
+function buildAutoReplaceExcludeResources({ alwaysExcluded = [], dependencyExcluded = [], supportedAutoReplaceResourceSet }) {
+  return uniqueSorted([
+    ...alwaysExcluded,
+    ...getSupportedAutoReplaceResources(dependencyExcluded, supportedAutoReplaceResourceSet),
+  ]);
+}
+
 export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [], supportedAutoReplaceResources = [] }) {
   const resourceTypes = resources;
   const supportedAutoReplaceResourceSet = new Set(supportedAutoReplaceResources);
@@ -66,10 +73,11 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     ...effectiveNoSyncResources,
     ...coreFocusedDependencyResources,
   ]);
-  const coreAutoReplaceExcludeResources = getSupportedAutoReplaceResources(
-    coreExcludeResources,
+  const coreAutoReplaceExcludeResources = buildAutoReplaceExcludeResources({
+    alwaysExcluded: effectiveNoSyncResources,
+    dependencyExcluded: coreFocusedDependencyResources,
     supportedAutoReplaceResourceSet,
-  );
+  });
 
   const coreModel = {
     name: configuredCoreSplit?.name || 'core',
