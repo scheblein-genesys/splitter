@@ -11,33 +11,43 @@ function parseReplaceEntitiesMode(value) {
   return value === 'use' ? 'use' : DEFAULT_REPLACE_ENTITIES_MODE;
 }
 
-export function buildWorkspace({ splits, noSyncResources, model }) {
+export function getCheckExportResourceList(generatedSplit) {
+  if (generatedSplit?.kind !== 'focused') return [];
+  return generatedSplit.selectedResources || [];
+}
+
+function buildSplitGeneratedOutputs(generatedSplit) {
+  const kind = generatedSplit?.kind === 'focused' ? 'focused' : 'default';
+
+  return {
+    firstLevelDependencies: generatedSplit?.firstLevelDependencies || [],
+    excludeResources: generatedSplit?.excludeResources || [],
+    autoReplaceExcludeResources: generatedSplit?.autoReplaceExcludeResources || [],
+    autoReplaceResourceList: generatedSplit?.autoReplaceResourceList || [],
+    checkExportResourceList: getCheckExportResourceList(generatedSplit),
+    useLegacyArchitectFlowExporter: generatedSplit?.useLegacyArchitectFlowExporter ?? null,
+    ...(kind === 'default'
+      ? { excludeFilterResources: generatedSplit?.excludeFilterResources || [] }
+      : { includeFilterResources: generatedSplit?.includeFilterResources || [] }),
+  };
+}
+
+export function buildWorkspace({ splits, noSyncResources, model, catalogVersion = null }) {
   return {
     schema: WORKSPACE_SCHEMA,
     version: WORKSPACE_VERSION,
     exportedAt: new Date().toISOString(),
+    catalogVersion,
     splits: splits.map(split => {
       const generatedSplit = model?.splits?.find(item => item.name === split.name);
       const kind = getWorkspaceSplitKind(split);
-      const workspaceSplit = {
+
+      return {
         name: split.name,
         kind,
         selectedResources: Array.isArray(split.selectedResources) ? split.selectedResources : [],
-        firstLevelDependencies: generatedSplit?.firstLevelDependencies || [],
-        excludeResources: generatedSplit?.excludeResources || [],
         replaceEntitiesMode: parseReplaceEntitiesMode(split.replaceEntitiesMode),
-      };
-
-      if (kind === 'default') {
-        return {
-          ...workspaceSplit,
-          excludeFilterResources: generatedSplit?.excludeFilterResources || [],
-        };
-      }
-
-      return {
-        ...workspaceSplit,
-        includeFilterResources: generatedSplit?.includeFilterResources || [],
+        ...buildSplitGeneratedOutputs(generatedSplit),
       };
     }),
     noSyncResources,
@@ -92,5 +102,5 @@ export function parseWorkspace({ rawText, knownResources, cleanName, createId })
       return true;
     });
 
-  return { splits, noSyncResources };
+  return { splits, noSyncResources, catalogVersion: workspace.catalogVersion || null };
 }

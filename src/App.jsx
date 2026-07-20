@@ -7,7 +7,7 @@ import supportedAutoReplaceResources from './data/supportedAutoReplaceResources.
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
-import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, parseWorkspace } from './lib/workspace.js';
+import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, getCheckExportResourceList, parseWorkspace } from './lib/workspace.js';
 import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
@@ -73,13 +73,19 @@ function buildExcludeResourcesCsv(excludeResources = []) {
   return ['name', ...excludeResources].join('\n');
 }
 
-function buildConfigsJson(autoReplaceResourceList = [], includeAutoReplaceResourceList = true) {
+function buildConfigsJson({
+  autoReplaceResourceList = [],
+  checkExportResourceList = [],
+  includeAutoReplaceResourceList = true,
+} = {}) {
+  const checkExportResourceListLine = `  "CheckExportResourceList": "${checkExportResourceList.join(',')}"`;
+
   if (includeAutoReplaceResourceList) {
     return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
-  "CheckExportResourceList": "",`;
+${checkExportResourceListLine}`;
   }
 
-  return `  "CheckExportResourceList": "",`;
+  return checkExportResourceListLine;
 }
 
 function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEFAULT_TF_EXCLUDE_RESOURCES) {
@@ -318,10 +324,11 @@ export default function App() {
   }, [selectedReplaceEntitiesMode, selectedGeneratedSplit]);
 
   const selectedConfigsJson = useMemo(() => {
-    return buildConfigsJson(
-      selectedGeneratedSplit?.autoReplaceResourceList || [],
-      selectedReplaceEntitiesMode === 'auto',
-    );
+    return buildConfigsJson({
+      autoReplaceResourceList: selectedGeneratedSplit?.autoReplaceResourceList || [],
+      checkExportResourceList: getCheckExportResourceList(selectedGeneratedSplit),
+      includeAutoReplaceResourceList: selectedReplaceEntitiesMode === 'auto',
+    });
   }, [selectedReplaceEntitiesMode, selectedGeneratedSplit]);
 
   function setSelectedSplitReplaceEntitiesMode(mode) {
@@ -434,7 +441,12 @@ export default function App() {
 
     downloadJsonFile({
       filename: 'orgsync-split-modeler.json',
-      data: buildWorkspace({ splits, noSyncResources, model }),
+      data: buildWorkspace({
+        splits,
+        noSyncResources,
+        model,
+        catalogVersion: selectedCatalogVersion,
+      }),
     });
   }
 
@@ -457,6 +469,9 @@ export default function App() {
 
         setSplits(workspace.splits);
         setNoSyncResources(workspace.noSyncResources);
+        if (workspace.catalogVersion) {
+          setSelectedCatalogVersion(workspace.catalogVersion);
+        }
         setSelectedSplitId(workspace.splits[0]?.id || null);
         setNewSplitName('');
         setIsAddingSplit(false);
