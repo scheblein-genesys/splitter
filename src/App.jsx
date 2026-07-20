@@ -78,7 +78,7 @@ function buildConfigsJson({
   checkExportResourceList = [],
   includeAutoReplaceResourceList = true,
 } = {}) {
-  const checkExportResourceListLine = `  "CheckExportResourceList": "${checkExportResourceList.join(',')}"`;
+  const checkExportResourceListLine = `  "CheckExportResourceList": "${checkExportResourceList.join(',')}",`;
 
   if (includeAutoReplaceResourceList) {
     return `  "AutoReplaceResourceList": "${autoReplaceResourceList.join(',')}",
