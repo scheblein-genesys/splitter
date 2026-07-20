@@ -6,7 +6,7 @@ import defaultTFExcludes from './data/defaultTFExcludes.json';
 import supportedAutoReplaceResources from './data/supportedAutoReplaceResources.json';
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
-import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, validateSplits } from './lib/resourceModel.js';
+import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, resourceMatchesQuery, validateSplits } from './lib/resourceModel.js';
 import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, getCheckExportResourceList, parseWorkspace } from './lib/workspace.js';
 import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
@@ -218,7 +218,7 @@ export default function App() {
   const selectedSplit = splits.find(split => split.id === selectedSplitId) || { id: null, name: 'no split', kind: 'focused', selectedResources: [], replaceEntitiesMode: DEFAULT_REPLACE_ENTITIES_MODE };
   const selectedReplaceEntitiesMode = getReplaceEntitiesMode(selectedSplit);
   const selectedSplitResources = getSplitResources(selectedSplit);
-  const filteredSelectedSplitResources = selectedSplitResources.filter(resource => resource.includes(selectedQuery));
+  const filteredSelectedSplitResources = selectedSplitResources.filter(resource => resourceMatchesQuery(resource, selectedQuery));
   const coreSplit = splits.find(split => split.kind === 'default');
   const selectedResources = useMemo(() => [...new Set(splits.flatMap(split => getSplitResources(split)))].sort(), [splits]);
 
@@ -231,7 +231,7 @@ export default function App() {
       const selectedSet = new Set(selectedSplitResources);
       return getSplitResources(coreSplit || { selectedResources: [] })
         .filter(resource => !selectedSet.has(resource))
-        .filter(resource => resource.includes(query));
+        .filter(resource => resourceMatchesQuery(resource, query));
     }
 
     return getAvailableResources({

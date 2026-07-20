@@ -10,10 +10,14 @@ export function getAssignedResources(splits) {
   return new Map(splits.flatMap(split => getSplitResources(split).map(resource => [resource, split.name])));
 }
 
+export function resourceMatchesQuery(resource, query) {
+  return resource.toLowerCase().includes(query.toLowerCase());
+}
+
 export function getAvailableResources({ resources, assigned, noSyncSet, query }) {
   return resources
     .filter(resource => !assigned.has(resource) && !noSyncSet.has(resource))
-    .filter(resource => resource.includes(query));
+    .filter(resource => resourceMatchesQuery(resource, query));
 }
 
 export function getResourceStats({ resources, splits, noSyncResources, assigned, noSyncSet }) {
