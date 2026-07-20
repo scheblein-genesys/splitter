@@ -405,9 +405,15 @@ export default function App() {
 
   function removeFromSplit(resource, splitId) {
     setSplits(current => current.map(split => {
-      return split.id === splitId
-        ? { ...split, selectedResources: getSplitResources(split).filter(item => item !== resource) }
-        : split;
+      if (split.id === splitId) {
+        return { ...split, selectedResources: getSplitResources(split).filter(item => item !== resource) };
+      }
+
+      if (split.kind === 'default') {
+        return { ...split, selectedResources: [...new Set([...getSplitResources(split), resource])].sort() };
+      }
+
+      return split;
     }));
   }
 
