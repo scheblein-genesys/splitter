@@ -15,7 +15,6 @@
   "genesyscloud_integration_action_draft",
   "genesyscloud_integration_credential",
   "genesyscloud_integration_custom_auth_action",
-  "genesyscloud_oauth_client",
   "genesyscloud_organization_authentication_settings",
   "genesyscloud_outbound_settings",
   "genesyscloud_routing_sms_address",
