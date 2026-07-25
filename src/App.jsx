@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy } from 'lucide-react';
+import { Plus, Trash2, Pencil, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy } from 'lucide-react';
 import resources from './data/resources.json';
 import defaultCSVExcludes from './data/defaultCSVExcludes.json';
 import defaultTFExcludes from './data/defaultTFExcludes.json';
@@ -116,6 +116,8 @@ export default function App() {
   const [selectedSplitId, setSelectedSplitId] = useState('core');
   const [newSplitName, setNewSplitName] = useState('');
   const [isAddingSplit, setIsAddingSplit] = useState(false);
+  const [renamingSplitId, setRenamingSplitId] = useState(null);
+  const [renameSplitName, setRenameSplitName] = useState('');
   const [resourceDialogType, setResourceDialogType] = useState(null);
   const [query, setQuery] = useState('');
   const [selectedQuery, setSelectedQuery] = useState('');
@@ -340,6 +342,7 @@ export default function App() {
   }
 
   function startAddingSplit() {
+    cancelRenamingSplit();
     setNewSplitName('');
     setQuery('');
     setIsAddingSplit(true);
@@ -348,6 +351,32 @@ export default function App() {
   function cancelAddingSplit() {
     setNewSplitName('');
     setIsAddingSplit(false);
+  }
+
+  function startRenamingSplit(split) {
+    if (split.kind === 'default') return;
+
+    setIsAddingSplit(false);
+    setRenamingSplitId(split.id);
+    setRenameSplitName(split.name);
+  }
+
+  function cancelRenamingSplit() {
+    setRenamingSplitId(null);
+    setRenameSplitName('');
+  }
+
+  function saveRenamedSplit() {
+    if (!renamingSplitId) return;
+
+    const name = cleanName(renameSplitName);
+
+    if (!name || name === 'core' || splits.some(split => split.id !== renamingSplitId && split.name === name)) return;
+
+    setSplits(current => current.map(split => (
+      split.id === renamingSplitId ? { ...split, name } : split
+    )));
+    cancelRenamingSplit();
   }
 
   function addSplit() {
@@ -438,6 +467,7 @@ export default function App() {
     setSelectedSplitId('core');
     setNewSplitName('');
     setIsAddingSplit(false);
+    cancelRenamingSplit();
     setResourceDialogType(null);
     setQuery('');
   }
@@ -524,10 +554,47 @@ export default function App() {
             </div>
           </div>}
           <div className="split-list">
-            {splits.map(split => <button key={split.id} className={split.id === selectedSplitId ? 'split selected' : 'split'} onClick={() => { setSelectedSplitId(split.id); setQuery(''); setSelectedQuery(''); }}>
-              <span><strong>{split.name}</strong><small>{getSplitResources(split).length} selected</small></span>
-              {split.kind !== 'default' && <Trash2 className="danger" size={16} onClick={event => { event.stopPropagation(); deleteSplit(split.id); }} />}
-            </button>)}
+            {splits.map(split => {
+              if (renamingSplitId === split.id) {
+                return <div key={split.id} className="field add-split-form split-rename-form">
+                  <label htmlFor={`rename-split-${split.id}`}>Rename focused split</label>
+                  <div className="inline">
+                    <input
+                      id={`rename-split-${split.id}`}
+                      value={renameSplitName}
+                      onChange={event => setRenameSplitName(event.target.value)}
+                      placeholder="split-name"
+                    />
+                    <button onClick={saveRenamedSplit}><CheckCircle2 size={16}/> Save</button>
+                    <button className="ghost" onClick={cancelRenamingSplit}>Cancel</button>
+                  </div>
+                </div>;
+              }
+
+              return <button
+                key={split.id}
+                className={split.id === selectedSplitId ? 'split selected' : 'split'}
+                onClick={() => {
+                  cancelRenamingSplit();
+                  setSelectedSplitId(split.id);
+                  setQuery('');
+                  setSelectedQuery('');
+                }}
+              >
+                <span><strong>{split.name}</strong><small>{getSplitResources(split).length} selected</small></span>
+                {split.kind !== 'default' && (
+                  <div className="split-actions">
+                    <Pencil
+                      size={16}
+                      title="Rename split"
+                      aria-label="Rename split"
+                      onClick={event => { event.stopPropagation(); startRenamingSplit(split); }}
+                    />
+                    <Trash2 className="danger" size={16} title="Delete split" aria-label="Delete split" onClick={event => { event.stopPropagation(); deleteSplit(split.id); }} />
+                  </div>
+                )}
+              </button>;
+            })}
           </div>
         </section>
       </div>

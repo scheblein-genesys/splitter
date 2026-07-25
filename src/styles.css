@@ -178,6 +178,20 @@ h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: upper
   white-space: nowrap;
 }
 .split small { color: #64748b; font-weight: 700; }
+.split-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.split-actions svg {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.split-rename-form {
+  min-width: min(100%, 420px);
+}
 .add-split-form {
   margin-bottom: 12px;
   max-width: 720px;
