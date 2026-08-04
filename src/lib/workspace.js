@@ -1,5 +1,8 @@
 export const WORKSPACE_SCHEMA = 'orgsync-splitter';
+export const WORKSPACE_LEGACY_SCHEMA = 'orgsync-split-modeler';
 export const WORKSPACE_VERSION = 1;
+
+const VALID_WORKSPACE_SCHEMAS = new Set([WORKSPACE_SCHEMA, WORKSPACE_LEGACY_SCHEMA]);
 export const DEFAULT_REPLACE_ENTITIES_MODE = 'auto';
 
 function getWorkspaceSplitKind(split) {
@@ -69,7 +72,7 @@ export function downloadJsonFile({ filename, data }) {
 export function parseWorkspace({ rawText, knownResources, cleanName, createId }) {
   const workspace = JSON.parse(rawText || '{}');
 
-  if (workspace.schema !== WORKSPACE_SCHEMA || !Array.isArray(workspace.splits) || !Array.isArray(workspace.noSyncResources)) {
+  if (!VALID_WORKSPACE_SCHEMAS.has(workspace.schema) || !Array.isArray(workspace.splits) || !Array.isArray(workspace.noSyncResources)) {
     throw new Error('INVALID_WORKSPACE');
   }
 
