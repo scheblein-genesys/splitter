@@ -8,6 +8,13 @@ import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalo
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, resourceMatchesQuery, validateSplits } from './lib/resourceModel.js';
 import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, getCheckExportResourceList, parseWorkspace } from './lib/workspace.js';
+import {
+  buildRoleDownloadUrl,
+  ROLE_READ_ONLY_CSV_SEGMENT,
+  ROLE_READ_ONLY_SEGMENT,
+  ROLE_READ_WRITE_CSV_SEGMENT,
+  ROLE_READ_WRITE_SEGMENT,
+} from './lib/cxAsCodePermalinks.js';
 import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
 
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
@@ -262,6 +269,23 @@ export default function App() {
     });
   }, [splits, noSyncSet, allResources]);
 
+  const readWriteRoleCsvUrl = useMemo(
+    () => buildRoleDownloadUrl(ROLE_READ_WRITE_CSV_SEGMENT, selectedCatalogVersion),
+    [selectedCatalogVersion],
+  );
+  const readWriteRoleTfUrl = useMemo(
+    () => buildRoleDownloadUrl(ROLE_READ_WRITE_SEGMENT, selectedCatalogVersion),
+    [selectedCatalogVersion],
+  );
+  const readOnlyRoleCsvUrl = useMemo(
+    () => buildRoleDownloadUrl(ROLE_READ_ONLY_CSV_SEGMENT, selectedCatalogVersion),
+    [selectedCatalogVersion],
+  );
+  const readOnlyRoleTfUrl = useMemo(
+    () => buildRoleDownloadUrl(ROLE_READ_ONLY_SEGMENT, selectedCatalogVersion),
+    [selectedCatalogVersion],
+  );
+
   const resourceDialog = useMemo(() => {
     if (resourceDialogType === 'known') {
       return {
@@ -476,7 +500,7 @@ export default function App() {
     if (splits.length === 0) return;
 
     downloadJsonFile({
-      filename: 'orgsync-split-modeler.json',
+      filename: 'orgsync-splitter.json',
       data: buildWorkspace({
         splits,
         noSyncResources,
@@ -514,7 +538,7 @@ export default function App() {
         setResourceDialogType(null);
         setQuery('');
       } catch {
-        window.alert('Unable to read that workspace file. Make sure it is a valid OrgSync split workspace JSON file.');
+        window.alert('Unable to read that workspace file. Make sure it is a valid OrgSync Splitter workspace JSON file.');
       }
     };
 
@@ -533,8 +557,18 @@ export default function App() {
 
   return <div className="app">
     <header className="hero">
-      <div>
-        <p className="eyebrow">OrgSync split modeler</p>
+      <div className="hero-primary">
+        <div className="hero-intro">
+          <p className="eyebrow">OrgSync Splitter</p>
+          <p className="role-csv-links">
+            Roles: Read/Write{' '}
+            <a href={readWriteRoleCsvUrl} target="_blank" rel="noreferrer">CSV</a>{' '}
+            <a href={readWriteRoleTfUrl} target="_blank" rel="noreferrer">TF</a>
+            {' '}or Read-only{' '}
+            <a href={readOnlyRoleCsvUrl} target="_blank" rel="noreferrer">CSV</a>{' '}
+            <a href={readOnlyRoleTfUrl} target="_blank" rel="noreferrer">TF</a>
+          </p>
+        </div>
         <h1>Design splits without losing the “everything is connected” safety net.</h1>
         <p className="subhead">Core starts with every syncable resource except the default excluded resources. Add focused splits, move resource types out of core, and review the dependencies needed for each split.</p>
 

@@ -1,4 +1,4 @@
-export const WORKSPACE_SCHEMA = 'orgsync-split-modeler';
+export const WORKSPACE_SCHEMA = 'orgsync-splitter';
 export const WORKSPACE_VERSION = 1;
 export const DEFAULT_REPLACE_ENTITIES_MODE = 'auto';
 

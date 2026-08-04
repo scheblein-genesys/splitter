@@ -22,9 +22,51 @@ code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; over
 
 .app { max-width: 1440px; margin: 0 auto; padding: 28px; }
 .hero { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: stretch; margin-bottom: 20px; }
+.hero-primary {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  min-width: 0;
+}
+.hero-primary .subhead {
+  margin-bottom: 18px;
+}
+.hero-primary .split-nav {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+.hero-primary .split-list {
+  flex: 1 1 auto;
+  align-content: start;
+}
+.hero-intro {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.hero-intro .eyebrow { margin: 0; }
 .eyebrow { margin: 0 0 8px; text-transform: uppercase; letter-spacing: .12em; color: #4f46e5; font-size: 12px; font-weight: 900; }
 h1 { margin: 0; font-size: clamp(30px, 4vw, 54px); line-height: 1.02; max-width: 940px; }
 .subhead { color: #526071; font-size: 18px; line-height: 1.5; max-width: 950px; }
+.role-csv-links {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.role-csv-links a {
+  color: #4338ca;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.role-csv-links a:hover { color: #312e81; }
 .card { background: rgba(255,255,255,.86); border: 1px solid #e2e8f0; box-shadow: 0 16px 40px rgba(15,23,42,.06); border-radius: 22px; padding: 18px; }
 .split-nav { margin-bottom: 18px; }
 .split-nav-actions {
@@ -333,6 +375,14 @@ pre { margin: 0; white-space: pre; overflow: auto; max-height: 520px; background
 
 @media (max-width: 1100px) {
   .hero, .grid { grid-template-columns: 1fr; }
+  .hero-primary .split-nav,
+  .hero-primary .split-list {
+    flex: none;
+    display: block;
+  }
+  .hero-primary .split-nav {
+    margin-bottom: 18px;
+  }
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .inline { flex-direction: column; }
   .hero-action-buttons { justify-content: flex-start; }
@@ -344,4 +394,10 @@ pre { margin: 0; white-space: pre; overflow: auto; max-height: 520px; background
   .stats-grid { grid-template-columns: 1fr; }
   .catalog-version-row { justify-content: flex-start; }
   .catalog-version-select { flex: 1; width: 100%; }
+  .hero-intro {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .role-csv-links { white-space: normal; }
 }
