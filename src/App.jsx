@@ -16,10 +16,16 @@ import {
   ROLE_READ_WRITE_SEGMENT,
 } from './lib/cxAsCodePermalinks.js';
 import { buildDependencyTreeUrl, buildDependencyTreeVersionOptionsFromIndex, cacheDependencyTreeVersionOptions, DEPENDENCY_TREE_INDEX_URL, getCachedDependencyTreeVersionOptions, getDependencyTreeVersionLabel, LATEST_DEPENDENCY_TREE_VERSION } from './lib/dependencyTreeVersions.js';
+import {
+  fetchResourceClassificationDocument,
+  RESOURCE_CLASSIFICATION_INDEX_URL,
+  resolveCoreExportClassification,
+} from './lib/resourceClassification.js';
 
 const BUNDLED_RESOURCE_CATALOG = buildFallbackCatalog(resources);
 const DEFAULT_CSV_EXCLUDE_RESOURCES = defaultCSVExcludes;
-const DEFAULT_TF_EXCLUDE_RESOURCES = defaultTFExcludes;
+/** Permanent core export exclusions — not version-derived (see resource-classification feed). */
+const TF_EXCLUDE_POLICY_RESOURCES = defaultTFExcludes;
 const SUPPORTED_AUTO_REPLACE_RESOURCES = supportedAutoReplaceResources;
 
 function formatTerraformResourceList(values) {
@@ -95,7 +101,7 @@ ${checkExportResourceListLine}`;
   return checkExportResourceListLine;
 }
 
-function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = DEFAULT_TF_EXCLUDE_RESOURCES) {
+function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = TF_EXCLUDE_POLICY_RESOURCES) {
   const noSyncSet = new Set(noSyncResources);
   const tfExcludeSet = new Set(tfExcludeResources);
 
@@ -116,6 +122,7 @@ function getReplaceEntitiesMode(split) {
 
 export default function App() {
   const [resourceCatalog, setResourceCatalog] = useState(BUNDLED_RESOURCE_CATALOG);
+  const [resourceClassification, setResourceClassification] = useState(null);
   const [selectedCatalogVersion, setSelectedCatalogVersion] = useState(LATEST_DEPENDENCY_TREE_VERSION);
   const [catalogVersionOptions, setCatalogVersionOptions] = useState(() => getCachedDependencyTreeVersionOptions() || [LATEST_DEPENDENCY_TREE_VERSION]);
   const [splits, setSplits] = useState(() => [buildCoreSplit(BUNDLED_RESOURCE_CATALOG.resourceTypes, DEFAULT_CSV_EXCLUDE_RESOURCES)]);
@@ -131,8 +138,18 @@ export default function App() {
   const [copiedOutput, setCopiedOutput] = useState(null);
   const importInputRef = useRef(null);
   const noSyncResourcesRef = useRef(noSyncResources);
+  const catalogLoadIdRef = useRef(0);
 
   const allResources = resourceCatalog.resourceTypes;
+
+  const exportClassification = useMemo(
+    () => resolveCoreExportClassification(
+      TF_EXCLUDE_POLICY_RESOURCES,
+      resourceClassification,
+      allResources,
+    ),
+    [allResources, resourceClassification],
+  );
 
   useEffect(() => {
     noSyncResourcesRef.current = noSyncResources;
@@ -169,28 +186,61 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadResourceCatalog() {
+    async function loadCatalogForVersion() {
+      const loadId = catalogLoadIdRef.current + 1;
+      catalogLoadIdRef.current = loadId;
+
       try {
-        const response = await fetch(buildDependencyTreeUrl(selectedCatalogVersion), {
+        const catalogResponse = await fetch(buildDependencyTreeUrl(selectedCatalogVersion), {
           cache: 'no-store',
           signal: controller.signal,
         });
 
-        if (!response.ok) {
-          throw new Error(`Resource catalog request failed: ${response.status}`);
+        if (!catalogResponse.ok) {
+          throw new Error(`Resource catalog request failed: ${catalogResponse.status}`);
         }
 
-        const catalog = parseResourceCatalog(await response.json());
+        const catalog = parseResourceCatalog(await catalogResponse.json());
 
         if (catalog.resourceTypes.length === 0) {
           throw new Error('Resource catalog did not contain any resource types.');
         }
 
+        let classification = null;
+
+        try {
+          const indexResponse = await fetch(RESOURCE_CLASSIFICATION_INDEX_URL, {
+            cache: 'no-store',
+            signal: controller.signal,
+          });
+          const classificationIndex = indexResponse.ok ? await indexResponse.json() : [];
+
+          classification = await fetchResourceClassificationDocument(selectedCatalogVersion, {
+            catalogVersion: selectedCatalogVersion === LATEST_DEPENDENCY_TREE_VERSION ? catalog.version : null,
+            availableVersions: classificationIndex,
+            signal: controller.signal,
+          });
+        } catch (classificationError) {
+          if (classificationError.name === 'AbortError') throw classificationError;
+        }
+
+        if (loadId !== catalogLoadIdRef.current) return;
+
+        const {
+          excludeFilterResources,
+          nonExportableResourceTypes,
+          coreSelectionExcludes,
+        } = resolveCoreExportClassification(
+          TF_EXCLUDE_POLICY_RESOURCES,
+          classification,
+          catalog.resourceTypes,
+        );
+        const coreSelectionExcludeSet = new Set(coreSelectionExcludes);
         const knownResourceSet = new Set(catalog.resourceTypes);
-        const coreTfExcludeSet = new Set(DEFAULT_TF_EXCLUDE_RESOURCES);
         const filteredNoSyncResources = noSyncResourcesRef.current.filter(resource => knownResourceSet.has(resource));
 
         setResourceCatalog(catalog);
+        setResourceClassification(classification);
 
         setNoSyncResources(filteredNoSyncResources);
         setSplits(current => {
@@ -202,13 +252,17 @@ export default function App() {
             }));
 
           const focusedSelected = new Set(focusedSplits.flatMap(split => getSplitResources(split)));
-          const coreSplit = current.find(split => split.kind === 'default') || buildCoreSplit(catalog.resourceTypes, filteredNoSyncResources);
+          const coreSplit = current.find(split => split.kind === 'default') || buildCoreSplit(
+            catalog.resourceTypes,
+            filteredNoSyncResources,
+            coreSelectionExcludes,
+          );
           const nextCoreSplit = {
             ...coreSplit,
             selectedResources: catalog.resourceTypes
               .filter(resource => !filteredNoSyncResources.includes(resource))
               .filter(resource => !focusedSelected.has(resource))
-              .filter(resource => !coreTfExcludeSet.has(resource)),
+              .filter(resource => !coreSelectionExcludeSet.has(resource)),
           };
 
           return [nextCoreSplit, ...focusedSplits];
@@ -216,10 +270,11 @@ export default function App() {
       } catch (error) {
         if (error.name === 'AbortError') return;
         setResourceCatalog(BUNDLED_RESOURCE_CATALOG);
+        setResourceClassification(null);
       }
     }
 
-    loadResourceCatalog();
+    loadCatalogForVersion();
 
     return () => controller.abort();
   }, [selectedCatalogVersion]);
@@ -248,8 +303,8 @@ export default function App() {
       assigned,
       noSyncSet,
       query,
-    }).filter(resource => !DEFAULT_TF_EXCLUDE_RESOURCES.includes(resource));
-  }, [assigned, noSyncSet, query, allResources, selectedSplit.kind, selectedSplitResources, coreSplit]);
+    }).filter(resource => !exportClassification.coreSelectionExcludes.includes(resource));
+  }, [assigned, exportClassification.coreSelectionExcludes, noSyncSet, query, allResources, selectedSplit.kind, selectedSplitResources, coreSplit]);
 
   const stats = useMemo(() => {
     return getResourceStats({
@@ -328,10 +383,11 @@ export default function App() {
       noSyncSet,
       stats,
       validation,
-      coreExcludeFilterResourceExcludes: DEFAULT_TF_EXCLUDE_RESOURCES,
+      coreExcludeFilterResourceExcludes: exportClassification.excludeFilterResources,
+      coreSelectionExcludes: exportClassification.coreSelectionExcludes,
       supportedAutoReplaceResources: SUPPORTED_AUTO_REPLACE_RESOURCES,
     });
-  }, [assigned, noSyncResources, noSyncSet, splits, stats, validation, allResources, resourceCatalog.dependencyMap]);
+  }, [assigned, exportClassification.coreSelectionExcludes, exportClassification.excludeFilterResources, noSyncResources, noSyncSet, splits, stats, validation, allResources, resourceCatalog.dependencyMap]);
 
   const selectedGeneratedSplit = useMemo(() => {
     return model.splits.find(split => split.name === selectedSplit.name) || model.splits[0] || null;
@@ -487,7 +543,7 @@ export default function App() {
 
   function reset() {
     setNoSyncResources(DEFAULT_CSV_EXCLUDE_RESOURCES);
-    setSplits([buildCoreSplit(allResources, DEFAULT_CSV_EXCLUDE_RESOURCES)]);
+    setSplits([buildCoreSplit(allResources, DEFAULT_CSV_EXCLUDE_RESOURCES, exportClassification.coreSelectionExcludes)]);
     setSelectedSplitId('core');
     setNewSplitName('');
     setIsAddingSplit(false);
@@ -669,7 +725,12 @@ export default function App() {
             <button className="ghost" onClick={() => setResourceDialogType(null)}>Close</button>
           </div>
           <div className="chips scroll short">
-            {resourceDialog.resources.map(resource => <span className={resourceDialog.allowRestore ? 'chip excluded' : 'chip'} key={resource}>{resource}{resourceDialog.allowRestore && <button onClick={() => restoreNoSyncResource(resource)}>restore</button>}</span>)}
+            {resourceDialog.resources.map(resource => (
+              <span className={resourceDialog.allowRestore ? 'chip excluded' : 'chip'} key={resource}>
+                {resource}
+                {resourceDialog.allowRestore && <button onClick={() => restoreNoSyncResource(resource)}>restore</button>}
+              </span>
+            ))}
           </div>
         </section>
       </div>}

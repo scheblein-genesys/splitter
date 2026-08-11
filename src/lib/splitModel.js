@@ -27,10 +27,13 @@ function buildAutoReplaceExcludeResources({ alwaysExcluded = [], dependencyExclu
   ]);
 }
 
-export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [], supportedAutoReplaceResources = [] }) {
+export function buildSplitModel({ resources, dependencyMap = new Map(), splits, noSyncResources, noSyncSet, stats, validation, coreExcludeFilterResourceExcludes = [], coreSelectionExcludes = [], supportedAutoReplaceResources = [] }) {
   const resourceTypes = resources;
   const supportedAutoReplaceResourceSet = new Set(supportedAutoReplaceResources);
   const coreExcludeFilterResourceExcludeSet = new Set(coreExcludeFilterResourceExcludes);
+  const coreSelectionExcludeSet = new Set(
+    coreSelectionExcludes.length > 0 ? coreSelectionExcludes : coreExcludeFilterResourceExcludes,
+  );
   const effectiveNoSyncSet = noSyncSet || new Set(noSyncResources);
   const effectiveNoSyncResources = uniqueSorted(noSyncResources || [...effectiveNoSyncSet])
     .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource));
@@ -44,12 +47,12 @@ export function buildSplitModel({ resources, dependencyMap = new Map(), splits, 
     ? getSplitResources(configuredCoreSplit)
       .filter(resource => !effectiveNoSyncSet.has(resource))
       .filter(resource => !focusedSelectedSet.has(resource))
-      .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource))
+      .filter(resource => !coreSelectionExcludeSet.has(resource))
       .sort()
     : resourceTypes
       .filter(resource => !effectiveNoSyncSet.has(resource))
       .filter(resource => !focusedSelectedSet.has(resource))
-      .filter(resource => !coreExcludeFilterResourceExcludeSet.has(resource))
+      .filter(resource => !coreSelectionExcludeSet.has(resource))
       .sort();
 
   const coreFirstLevelDependencies = getFirstLevelDependencies({
