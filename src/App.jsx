@@ -7,7 +7,7 @@ import supportedAutoReplaceResources from './data/supportedAutoReplaceResources.
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
 import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, resourceMatchesQuery, validateSplits } from './lib/resourceModel.js';
-import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, getCheckExportResourceList, parseWorkspace } from './lib/workspace.js';
+import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, getCheckExportResourceList, parseReplaceEntitiesMode, parseWorkspace } from './lib/workspace.js';
 import {
   buildRoleDownloadUrl,
   ROLE_READ_ONLY_CSV_SEGMENT,
@@ -117,7 +117,7 @@ function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = TF_
 }
 
 function getReplaceEntitiesMode(split) {
-  return split?.replaceEntitiesMode === 'use' ? 'use' : DEFAULT_REPLACE_ENTITIES_MODE;
+  return parseReplaceEntitiesMode(split?.replaceEntitiesMode);
 }
 
 export default function App() {
@@ -409,7 +409,7 @@ export default function App() {
     return buildConfigsJson({
       autoReplaceResourceList: selectedGeneratedSplit?.autoReplaceResourceList || [],
       checkExportResourceList: getCheckExportResourceList(selectedGeneratedSplit),
-      includeAutoReplaceResourceList: selectedReplaceEntitiesMode === 'auto',
+      includeAutoReplaceResourceList: selectedReplaceEntitiesMode !== 'use',
     });
   }, [selectedReplaceEntitiesMode, selectedGeneratedSplit]);
 
@@ -817,6 +817,13 @@ export default function App() {
             <div className="generated-file-header">
               <h3>Replace Entities</h3>
               <div className="replace-entities-toggle" role="group" aria-label="Replace entities mode">
+                <button
+                  type="button"
+                  className={selectedReplaceEntitiesMode === 'both' ? 'active' : undefined}
+                  onClick={() => setSelectedSplitReplaceEntitiesMode('both')}
+                >
+                  both
+                </button>
                 <button
                   type="button"
                   className={selectedReplaceEntitiesMode === 'auto' ? 'active' : undefined}

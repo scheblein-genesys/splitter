@@ -3,15 +3,16 @@ export const WORKSPACE_LEGACY_SCHEMA = 'orgsync-split-modeler';
 export const WORKSPACE_VERSION = 1;
 
 const VALID_WORKSPACE_SCHEMAS = new Set([WORKSPACE_SCHEMA, WORKSPACE_LEGACY_SCHEMA]);
-export const DEFAULT_REPLACE_ENTITIES_MODE = 'auto';
+export const DEFAULT_REPLACE_ENTITIES_MODE = 'both';
+const VALID_REPLACE_ENTITIES_MODES = new Set(['auto', 'use', 'both']);
 
 function getWorkspaceSplitKind(split) {
   if (split.kind === 'default' || split.kind === 'focused') return split.kind;
   throw new Error('INVALID_SPLIT_KIND');
 }
 
-function parseReplaceEntitiesMode(value) {
-  return value === 'use' ? 'use' : DEFAULT_REPLACE_ENTITIES_MODE;
+export function parseReplaceEntitiesMode(value) {
+  return VALID_REPLACE_ENTITIES_MODES.has(value) ? value : DEFAULT_REPLACE_ENTITIES_MODE;
 }
 
 export function getCheckExportResourceList(generatedSplit) {
