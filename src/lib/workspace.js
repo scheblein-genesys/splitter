@@ -3,7 +3,7 @@ export const WORKSPACE_LEGACY_SCHEMA = 'orgsync-split-modeler';
 export const WORKSPACE_VERSION = 1;
 
 const VALID_WORKSPACE_SCHEMAS = new Set([WORKSPACE_SCHEMA, WORKSPACE_LEGACY_SCHEMA]);
-export const DEFAULT_REPLACE_ENTITIES_MODE = 'both';
+export const DEFAULT_REPLACE_ENTITIES_MODE = 'auto';
 const VALID_REPLACE_ENTITIES_MODES = new Set(['auto', 'use', 'both']);
 
 function getWorkspaceSplitKind(split) {

@@ -819,13 +819,6 @@ export default function App() {
               <div className="replace-entities-toggle" role="group" aria-label="Replace entities mode">
                 <button
                   type="button"
-                  className={selectedReplaceEntitiesMode === 'both' ? 'active' : undefined}
-                  onClick={() => setSelectedSplitReplaceEntitiesMode('both')}
-                >
-                  both
-                </button>
-                <button
-                  type="button"
                   className={selectedReplaceEntitiesMode === 'auto' ? 'active' : undefined}
                   onClick={() => setSelectedSplitReplaceEntitiesMode('auto')}
                 >
@@ -837,6 +830,13 @@ export default function App() {
                   onClick={() => setSelectedSplitReplaceEntitiesMode('use')}
                 >
                   use
+                </button>
+                <button
+                  type="button"
+                  className={selectedReplaceEntitiesMode === 'both' ? 'active' : undefined}
+                  onClick={() => setSelectedSplitReplaceEntitiesMode('both')}
+                >
+                  both
                 </button>
               </div>
             </div>
