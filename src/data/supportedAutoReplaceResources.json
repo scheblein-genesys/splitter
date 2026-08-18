@@ -19,5 +19,8 @@
   "genesyscloud_architect_datatable",
   "genesyscloud_team",
   "genesyscloud_speechandtextanalytics_topic",
+  "genesyscloud_architect_schedules",
+  "genesyscloud_architect_schedulegroups",
+  "genesyscloud_telephony_providers_edges_extension_pool",
   "genesyscloud_flow"
 ]
