@@ -1,4 +1,5 @@
 [
+  "genesyscloud_integration",
   "genesyscloud_telephony_providers_edges_edge_group",
   "genesyscloud_telephony_providers_edges_trunkbasesettings"
 ]
