@@ -284,6 +284,35 @@ h3 { margin: 22px 0 10px; font-size: 14px; color: #475569; text-transform: upper
 .search-clear { padding: 6px 8px; font-size: 12px; min-height: auto; }
 .search input:focus { outline: none; }
 .empty { color: #64748b; font-style: italic; }
+.auto-replace-warning {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.auto-replace-warning h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auto-replace-warning p { margin: 0 0 8px; }
+.auto-replace-warning p:last-child { margin-bottom: 0; }
+.auto-replace-warning ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.auto-replace-warning li { margin: 4px 0; }
+.auto-replace-warning code {
+  font-size: 11px;
+  color: #713f12;
+}
 button.text-link {
   background: none;
   border: none;

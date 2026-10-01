@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, Pencil, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy } from 'lucide-react';
+import { Plus, Trash2, Pencil, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy, TriangleAlert } from 'lucide-react';
+import {
+  getFocusedOwnedAutoReplaceOmissions,
+  getResourcesOmittedFromAutoReplaceCsv,
+} from './lib/autoReplace.js';
 import resources from './data/resources.json';
 import defaultCSVExcludes from './data/defaultCSVExcludes.json';
 import defaultTFExcludes from './data/defaultTFExcludes.json';
@@ -404,6 +408,19 @@ export default function App() {
 
     return buildExcludeResourcesCsv(excludeResources || []);
   }, [selectedReplaceEntitiesMode, selectedGeneratedSplit]);
+
+  const selectedAutoReplaceOmissions = useMemo(() => {
+    if (selectedReplaceEntitiesMode !== 'auto' || !selectedGeneratedSplit) return [];
+
+    return getResourcesOmittedFromAutoReplaceCsv(
+      selectedGeneratedSplit.excludeResources,
+      selectedGeneratedSplit.autoReplaceExcludeResources,
+    );
+  }, [selectedGeneratedSplit, selectedReplaceEntitiesMode]);
+
+  const focusedOwnedAutoReplaceOmissions = useMemo(() => {
+    return getFocusedOwnedAutoReplaceOmissions(selectedAutoReplaceOmissions, assigned);
+  }, [assigned, selectedAutoReplaceOmissions]);
 
   const selectedConfigsJson = useMemo(() => {
     return buildConfigsJson({
@@ -810,6 +827,44 @@ export default function App() {
               <h3>exclude_resources.csv</h3>
               <button className="ghost copy-button" onClick={() => copyGeneratedOutput('exclude_resources.csv', selectedExcludeResourcesCsv)} title="Copy exclude_resources.csv to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'exclude_resources.csv' ? 'Copied' : 'Copy'}</button>
             </div>
+            {selectedAutoReplaceOmissions.length > 0 && (
+              <div className="auto-replace-warning" role="status">
+                <h4><TriangleAlert size={16} aria-hidden="true" /> Auto replace CSV gap</h4>
+                <p>
+                  Replace mode is <strong>auto</strong>, so <code>exclude_resources.csv</code> uses the supported auto-replace allowlist.
+                  {focusedOwnedAutoReplaceOmissions.length > 0
+                    ? ' Some types owned by other splits (but still required as dependencies here) are omitted:'
+                    : ' These dependency excludes are omitted:'}
+                </p>
+                {focusedOwnedAutoReplaceOmissions.length > 0 ? (
+                  <ul>
+                    {focusedOwnedAutoReplaceOmissions.map(({ resource, splitName }) => (
+                      <li key={resource}>
+                        <code>{resource}</code> — owned by split <strong>{splitName}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul>
+                    {selectedAutoReplaceOmissions.map(resource => (
+                      <li key={resource}><code>{resource}</code></li>
+                    ))}
+                  </ul>
+                )}
+                {focusedOwnedAutoReplaceOmissions.length > 0 && focusedOwnedAutoReplaceOmissions.length < selectedAutoReplaceOmissions.length && (
+                  <ul>
+                    {selectedAutoReplaceOmissions
+                      .filter(resource => !assigned.has(resource))
+                      .map(resource => (
+                        <li key={resource}><code>{resource}</code></li>
+                      ))}
+                  </ul>
+                )}
+                <p>
+                  Switch replace mode to <strong>both</strong> to include the full exclude list.
+                </p>
+              </div>
+            )}
             <pre>{selectedExcludeResourcesCsv}</pre>
           </div>
 
