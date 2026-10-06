@@ -10,7 +10,7 @@ import defaultTFExcludes from './data/defaultTFExcludes.json';
 import supportedAutoReplaceResources from './data/supportedAutoReplaceResources.json';
 import { buildFallbackCatalog, parseResourceCatalog } from './lib/resourceCatalog.js';
 import { buildSplitModel } from './lib/splitModel.js';
-import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, resourceMatchesQuery, validateSplits } from './lib/resourceModel.js';
+import { cleanName, getAssignedResources, getAvailableResources, getResourceStats, getSplitResources, reconcileSplitOwnership, resourceMatchesQuery, validateSplits } from './lib/resourceModel.js';
 import { buildWorkspace, DEFAULT_REPLACE_ENTITIES_MODE, downloadJsonFile, getCheckExportResourceList, parseReplaceEntitiesMode, parseWorkspace } from './lib/workspace.js';
 import {
   buildRoleDownloadUrl,
@@ -105,9 +105,9 @@ ${checkExportResourceListLine}`;
   return checkExportResourceListLine;
 }
 
-function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = TF_EXCLUDE_POLICY_RESOURCES) {
+function buildCoreSplit(resourceTypes, noSyncResources, coreDefaultExcludes = TF_EXCLUDE_POLICY_RESOURCES) {
   const noSyncSet = new Set(noSyncResources);
-  const tfExcludeSet = new Set(tfExcludeResources);
+  const coreDefaultExcludeSet = new Set(coreDefaultExcludes);
 
   return {
     id: 'core',
@@ -116,7 +116,7 @@ function buildCoreSplit(resourceTypes, noSyncResources, tfExcludeResources = TF_
     replaceEntitiesMode: DEFAULT_REPLACE_ENTITIES_MODE,
     selectedResources: resourceTypes
       .filter(resource => !noSyncSet.has(resource))
-      .filter(resource => !tfExcludeSet.has(resource)),
+      .filter(resource => !coreDefaultExcludeSet.has(resource)),
   };
 }
 
@@ -230,16 +230,11 @@ export default function App() {
 
         if (loadId !== catalogLoadIdRef.current) return;
 
-        const {
-          excludeFilterResources,
-          nonExportableResourceTypes,
-          coreSelectionExcludes,
-        } = resolveCoreExportClassification(
+        const { coreDefaultExcludes } = resolveCoreExportClassification(
           TF_EXCLUDE_POLICY_RESOURCES,
           classification,
           catalog.resourceTypes,
         );
-        const coreSelectionExcludeSet = new Set(coreSelectionExcludes);
         const knownResourceSet = new Set(catalog.resourceTypes);
         const filteredNoSyncResources = noSyncResourcesRef.current.filter(resource => knownResourceSet.has(resource));
 
@@ -247,30 +242,12 @@ export default function App() {
         setResourceClassification(classification);
 
         setNoSyncResources(filteredNoSyncResources);
-        setSplits(current => {
-          const focusedSplits = current
-            .filter(split => split.kind === 'focused')
-            .map(split => ({
-              ...split,
-              selectedResources: getSplitResources(split).filter(resource => knownResourceSet.has(resource)),
-            }));
-
-          const focusedSelected = new Set(focusedSplits.flatMap(split => getSplitResources(split)));
-          const coreSplit = current.find(split => split.kind === 'default') || buildCoreSplit(
-            catalog.resourceTypes,
-            filteredNoSyncResources,
-            coreSelectionExcludes,
-          );
-          const nextCoreSplit = {
-            ...coreSplit,
-            selectedResources: catalog.resourceTypes
-              .filter(resource => !filteredNoSyncResources.includes(resource))
-              .filter(resource => !focusedSelected.has(resource))
-              .filter(resource => !coreSelectionExcludeSet.has(resource)),
-          };
-
-          return [nextCoreSplit, ...focusedSplits];
-        });
+        setSplits(current => reconcileSplitOwnership(
+          catalog.resourceTypes,
+          current,
+          filteredNoSyncResources,
+          coreDefaultExcludes,
+        ));
       } catch (error) {
         if (error.name === 'AbortError') return;
         setResourceCatalog(BUNDLED_RESOURCE_CATALOG);
@@ -293,12 +270,25 @@ export default function App() {
   const assigned = useMemo(() => getAssignedResources(splits), [splits]);
 
   const noSyncSet = useMemo(() => new Set(noSyncResources), [noSyncResources]);
+  const coreDefaultExcludeSet = useMemo(
+    () => new Set(exportClassification.coreDefaultExcludes),
+    [exportClassification.coreDefaultExcludes],
+  );
 
   const availableResources = useMemo(() => {
     if (selectedSplit.kind === 'focused') {
       const selectedSet = new Set(selectedSplitResources);
-      return getSplitResources(coreSplit || { selectedResources: [] })
-        .filter(resource => !selectedSet.has(resource))
+      const fromCore = getSplitResources(coreSplit || { selectedResources: [] })
+        .filter(resource => !selectedSet.has(resource));
+      const fromPolicySkipPool = allResources.filter(resource => (
+        !assigned.has(resource)
+        && !noSyncSet.has(resource)
+        && coreDefaultExcludeSet.has(resource)
+        && !selectedSet.has(resource)
+      ));
+
+      return [...new Set([...fromCore, ...fromPolicySkipPool])]
+        .sort()
         .filter(resource => resourceMatchesQuery(resource, query));
     }
 
@@ -307,8 +297,8 @@ export default function App() {
       assigned,
       noSyncSet,
       query,
-    }).filter(resource => !exportClassification.coreSelectionExcludes.includes(resource));
-  }, [assigned, exportClassification.coreSelectionExcludes, noSyncSet, query, allResources, selectedSplit.kind, selectedSplitResources, coreSplit]);
+    });
+  }, [assigned, coreDefaultExcludeSet, noSyncSet, query, allResources, selectedSplit.kind, selectedSplitResources, coreSplit]);
 
   const stats = useMemo(() => {
     return getResourceStats({
@@ -325,8 +315,9 @@ export default function App() {
       resources: allResources,
       splits,
       noSyncSet,
+      coreDefaultExcludeSet,
     });
-  }, [splits, noSyncSet, allResources]);
+  }, [splits, noSyncSet, coreDefaultExcludeSet, allResources]);
 
   const readWriteRoleCsvUrl = useMemo(
     () => buildRoleDownloadUrl(ROLE_READ_WRITE_CSV_SEGMENT, selectedCatalogVersion),
@@ -388,10 +379,9 @@ export default function App() {
       stats,
       validation,
       coreExcludeFilterResourceExcludes: exportClassification.excludeFilterResources,
-      coreSelectionExcludes: exportClassification.coreSelectionExcludes,
       supportedAutoReplaceResources: SUPPORTED_AUTO_REPLACE_RESOURCES,
     });
-  }, [assigned, exportClassification.coreSelectionExcludes, exportClassification.excludeFilterResources, noSyncResources, noSyncSet, splits, stats, validation, allResources, resourceCatalog.dependencyMap]);
+  }, [assigned, exportClassification.excludeFilterResources, noSyncResources, noSyncSet, splits, stats, validation, allResources, resourceCatalog.dependencyMap]);
 
   const selectedGeneratedSplit = useMemo(() => {
     return model.splits.find(split => split.name === selectedSplit.name) || model.splits[0] || null;
@@ -560,7 +550,7 @@ export default function App() {
 
   function reset() {
     setNoSyncResources(DEFAULT_CSV_EXCLUDE_RESOURCES);
-    setSplits([buildCoreSplit(allResources, DEFAULT_CSV_EXCLUDE_RESOURCES, exportClassification.coreSelectionExcludes)]);
+    setSplits([buildCoreSplit(allResources, DEFAULT_CSV_EXCLUDE_RESOURCES, exportClassification.coreDefaultExcludes)]);
     setSelectedSplitId('core');
     setNewSplitName('');
     setIsAddingSplit(false);
@@ -600,8 +590,13 @@ export default function App() {
           createId: () => crypto.randomUUID(),
         });
 
-        setSplits(workspace.splits);
         setNoSyncResources(workspace.noSyncResources);
+        setSplits(reconcileSplitOwnership(
+          allResources,
+          workspace.splits,
+          workspace.noSyncResources,
+          exportClassification.coreDefaultExcludes,
+        ));
         if (workspace.catalogVersion) {
           setSelectedCatalogVersion(workspace.catalogVersion);
         }

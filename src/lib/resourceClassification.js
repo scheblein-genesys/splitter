@@ -112,6 +112,9 @@ function filterToKnownTypes(types, knownResourceTypes) {
  * exclude_filter_resources should list exportable types you intentionally skip.
  * Non-exportable types are omitted from that filter — excluding them is redundant
  * (same rule as cxascode lab package generation).
+ *
+ * coreDefaultExcludes (TF policy + non-exportable) keeps types off core by default; they can
+ * still be assigned to a focused split or no-sync. excludeFilterResources only affects TF output.
  */
 export function resolveCoreExportClassification(
   policyExcludes,
@@ -128,7 +131,7 @@ export function resolveCoreExportClassification(
   // Policy excludes apply only while the type can still be bulk-exported.
   const excludeFilterResources = policyExcludeResources.filter(type => !nonExportableSet.has(type));
 
-  const coreSelectionExcludes = filterToKnownTypes([
+  const coreDefaultExcludes = filterToKnownTypes([
     ...policyExcludeResources,
     ...nonExportableResourceTypes,
   ], knownResourceTypes);
@@ -136,7 +139,7 @@ export function resolveCoreExportClassification(
   return {
     excludeFilterResources,
     nonExportableResourceTypes,
-    coreSelectionExcludes,
+    coreDefaultExcludes,
   };
 }
 
