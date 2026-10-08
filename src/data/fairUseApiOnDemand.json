@@ -1,0 +1,71 @@
+{
+  "sourceUrl": "https://help.genesys.cloud/articles/genesys-cloud-fair-use-policy/",
+  "feature": "API on-demand",
+  "unit": "API requests",
+  "licenseTierOrder": [
+    "communicate",
+    "cx1",
+    "cx2",
+    "cx2Digital",
+    "cx3",
+    "cx3Digital",
+    "cx4",
+    "ex"
+  ],
+  "licenseTierLabels": {
+    "communicate": "Communicate",
+    "cx1": "CX 1",
+    "cx2": "CX 2",
+    "cx2Digital": "CX 2 Digital",
+    "cx3": "CX 3",
+    "cx3Digital": "CX 3 Digital",
+    "cx4": "CX 4",
+    "ex": "EX"
+  },
+  "billableUserTypes": {
+    "named": {
+      "label": "Named",
+      "allocationsPerUser": {
+        "communicate": 10000,
+        "cx1": 75000,
+        "cx2": 110000,
+        "cx2Digital": 110000,
+        "cx3": 140000,
+        "cx3Digital": 140000,
+        "cx4": 180000,
+        "ex": 75000
+      }
+    },
+    "concurrent": {
+      "label": "Concurrent",
+      "allocationsPerUser": {
+        "cx1": 97500,
+        "cx2": 143000,
+        "cx2Digital": 143000,
+        "cx3": 182000,
+        "cx3Digital": 182000,
+        "cx4": 234000
+      }
+    },
+    "hourlyInteracting": {
+      "label": "Hourly interacting",
+      "allocationsPerUser": {
+        "cx1": 735,
+        "cx2": 1080,
+        "cx2Digital": 1080,
+        "cx3": 1375,
+        "cx3Digital": 1375,
+        "cx4": 1765
+      }
+    },
+    "hourlyLoggedIn": {
+      "label": "Hourly logged in",
+      "allocationsPerUser": {
+        "cx1": 675,
+        "cx2": 990,
+        "cx3": 1260,
+        "cx4": 1620
+      }
+    }
+  }
+}

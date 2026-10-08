@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, Pencil, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy, TriangleAlert } from 'lucide-react';
+import { Plus, Trash2, Pencil, ArrowRight, RotateCcw, Download, Upload, CheckCircle2, Search, ClipboardCopy, TriangleAlert, Calculator } from 'lucide-react';
+import ApiOnDemandCalculator from './components/ApiOnDemandCalculator.jsx';
+import {
+  isApiCalculatorPathOpen,
+  migrateLegacyApiCalculatorHash,
+  setApiCalculatorPathOpen,
+} from './lib/apiCalculatorPermalink.js';
 import {
   getFocusedOwnedAutoReplaceOmissions,
   getResourcesOmittedFromAutoReplaceCsv,
@@ -137,12 +143,33 @@ export default function App() {
   const [renamingSplitId, setRenamingSplitId] = useState(null);
   const [renameSplitName, setRenameSplitName] = useState('');
   const [resourceDialogType, setResourceDialogType] = useState(null);
+  const [showApiOnDemandCalculator, setShowApiOnDemandCalculator] = useState(
+    () => migrateLegacyApiCalculatorHash() || isApiCalculatorPathOpen(),
+  );
   const [query, setQuery] = useState('');
   const [selectedQuery, setSelectedQuery] = useState('');
   const [copiedOutput, setCopiedOutput] = useState(null);
   const importInputRef = useRef(null);
   const noSyncResourcesRef = useRef(noSyncResources);
   const catalogLoadIdRef = useRef(0);
+
+  useEffect(() => {
+    function syncCalculatorFromPath() {
+      setShowApiOnDemandCalculator(isApiCalculatorPathOpen());
+    }
+    window.addEventListener('popstate', syncCalculatorFromPath);
+    return () => window.removeEventListener('popstate', syncCalculatorFromPath);
+  }, []);
+
+  function openApiOnDemandCalculator() {
+    setShowApiOnDemandCalculator(true);
+    setApiCalculatorPathOpen(true);
+  }
+
+  function closeApiOnDemandCalculator() {
+    setShowApiOnDemandCalculator(false);
+    setApiCalculatorPathOpen(false);
+  }
 
   const allResources = resourceCatalog.resourceTypes;
 
@@ -708,6 +735,14 @@ export default function App() {
           <button className="ghost" onClick={reset}><RotateCcw size={16}/> Reset</button>
         </div>
         <div className="catalog-version-row">
+          <button
+            className="ghost catalog-version-apis"
+            type="button"
+            onClick={openApiOnDemandCalculator}
+            aria-label="API on-demand fair use calculator"
+          >
+            <Calculator size={16} aria-hidden="true" /> APIs
+          </button>
           <label htmlFor="catalog-version-select">Version:</label>
           <select id="catalog-version-select" className="catalog-version-select" aria-label="Dependency catalog version" value={selectedCatalogVersion} onChange={event => setSelectedCatalogVersion(event.target.value)}>
             {catalogVersionOptions.map(version => <option key={version} value={version}>{getDependencyTreeVersionLabel(version)}</option>)}
@@ -729,6 +764,8 @@ export default function App() {
         </div>
       </div>
     </header>
+
+    {showApiOnDemandCalculator && <ApiOnDemandCalculator onClose={closeApiOnDemandCalculator} />}
 
     {resourceDialog && <div className="dialog-backdrop" role="presentation" onClick={() => setResourceDialogType(null)}>
         <section className="card resource-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-dialog-title" onClick={event => event.stopPropagation()}>

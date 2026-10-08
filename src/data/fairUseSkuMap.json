@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 2,
+  "fairUseRatesFile": "fairUseApiOnDemand.json",
+  "fairUsePolicyUrl": "https://help.genesys.cloud/articles/genesys-cloud-fair-use-policy/",
+  "notes": "24 licenseRows = fair use API on-demand policy matrix. partNumbers and subscriptionNames confirmed against Genesys billing catalog (Communicate through EX). Add aliases only when subscriptionoverview uses a different string for the same cell.",
+  "subscriptionLicenseGroupings": [
+    "user-license",
+    "billable-app-concurrent-license",
+    "billable-app-usage-license",
+    "billable-app-hourly-license",
+    "hourly-user-license"
+  ],
+  "subscriptionLicenseGroupingRules": {
+    "prefixes": ["billable-app-"],
+    "suffixes": ["-license", "-user-license"]
+  },
+  "licenseRows": [
+    {
+      "billableUserType": "named",
+      "licenseTier": "communicate",
+      "partNumbers": ["PC-170-NV-USCOM"],
+      "subscriptionNames": ["Genesys Cloud Communicate User"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "cx1",
+      "partNumbers": ["PC-170-NV-USR1"],
+      "subscriptionNames": ["Genesys Cloud CX 1"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "cx2",
+      "partNumbers": ["PC-170-NV-USR2"],
+      "subscriptionNames": ["Genesys Cloud CX 2"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "cx2Digital",
+      "partNumbers": ["GC-170-NV-USR2D"],
+      "subscriptionNames": ["Genesys Cloud CX 2 Digital User"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "cx3",
+      "partNumbers": ["PC-170-NV-USR3"],
+      "subscriptionNames": ["Genesys Cloud CX 3"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "cx3Digital",
+      "partNumbers": ["GC-170-NV-USR3D"],
+      "subscriptionNames": ["Genesys Cloud CX 3 Digital User"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "cx4",
+      "partNumbers": ["GC-170-NV-USR4"],
+      "subscriptionNames": ["Genesys Cloud CX 4"]
+    },
+    {
+      "billableUserType": "named",
+      "licenseTier": "ex",
+      "partNumbers": ["GC-170-NV-EXUSR"],
+      "subscriptionNames": ["Genesys Cloud EX"]
+    },
+    {
+      "billableUserType": "concurrent",
+      "licenseTier": "cx1",
+      "partNumbers": ["PC-170-NV-USR1C"],
+      "subscriptionNames": ["Genesys Cloud CX 1 Concurrent"]
+    },
+    {
+      "billableUserType": "concurrent",
+      "licenseTier": "cx2",
+      "partNumbers": ["PC-170-NV-USR2C"],
+      "subscriptionNames": ["Genesys Cloud CX 2 Concurrent"]
+    },
+    {
+      "billableUserType": "concurrent",
+      "licenseTier": "cx2Digital",
+      "partNumbers": ["GC-170-NV-USR2DC"],
+      "subscriptionNames": ["Genesys Cloud CX 2 Digital Concurrent User"]
+    },
+    {
+      "billableUserType": "concurrent",
+      "licenseTier": "cx3",
+      "partNumbers": ["PC-170-NV-USR3C"],
+      "subscriptionNames": ["Genesys Cloud CX 3 Concurrent"]
+    },
+    {
+      "billableUserType": "concurrent",
+      "licenseTier": "cx3Digital",
+      "partNumbers": ["GC-170-NV-USR3DC"],
+      "subscriptionNames": ["Genesys Cloud CX 3 Digital Concurrent User"]
+    },
+    {
+      "billableUserType": "concurrent",
+      "licenseTier": "cx4",
+      "partNumbers": ["GC-170-NV-USR4C"],
+      "subscriptionNames": ["Genesys Cloud CX 4 Concurrent"]
+    },
+    {
+      "billableUserType": "hourlyInteracting",
+      "licenseTier": "cx1",
+      "partNumbers": ["GC-170-NV-USR1HI"],
+      "subscriptionNames": ["Genesys Cloud 1 Hourly Interacting"]
+    },
+    {
+      "billableUserType": "hourlyInteracting",
+      "licenseTier": "cx2",
+      "partNumbers": ["GC-170-NV-USR2HI"],
+      "subscriptionNames": ["Genesys Cloud 2 Hourly Interacting"]
+    },
+    {
+      "billableUserType": "hourlyInteracting",
+      "licenseTier": "cx2Digital",
+      "partNumbers": ["GC-170-NV-USR2DHI"],
+      "subscriptionNames": ["Genesys Cloud 2 Digital Hourly Interacting"]
+    },
+    {
+      "billableUserType": "hourlyInteracting",
+      "licenseTier": "cx3",
+      "partNumbers": ["GC-170-NV-USR3HI"],
+      "subscriptionNames": ["Genesys Cloud 3 Hourly Interacting"]
+    },
+    {
+      "billableUserType": "hourlyInteracting",
+      "licenseTier": "cx3Digital",
+      "partNumbers": ["GC-170-NV-USR3DHI"],
+      "subscriptionNames": ["Genesys Cloud 3 Digital Hourly Interacting"]
+    },
+    {
+      "billableUserType": "hourlyInteracting",
+      "licenseTier": "cx4",
+      "partNumbers": ["GC-170-NV-USR4HI"],
+      "subscriptionNames": ["Genesys Cloud 4 Hourly Interacting"]
+    },
+    {
+      "billableUserType": "hourlyLoggedIn",
+      "licenseTier": "cx1",
+      "partNumbers": ["PC-170-NV-USR1H"],
+      "subscriptionNames": ["Genesys Cloud CX 1 Hourly"]
+    },
+    {
+      "billableUserType": "hourlyLoggedIn",
+      "licenseTier": "cx2",
+      "partNumbers": ["PC-170-NV-USR2H"],
+      "subscriptionNames": ["Genesys Cloud CX 2 Hourly"]
+    },
+    {
+      "billableUserType": "hourlyLoggedIn",
+      "licenseTier": "cx3",
+      "partNumbers": ["PC-170-NV-USR3H"],
+      "subscriptionNames": ["Genesys Cloud CX 3 Hourly"]
+    },
+    {
+      "billableUserType": "hourlyLoggedIn",
+      "licenseTier": "cx4",
+      "partNumbers": ["PC-170-NV-USR4H"],
+      "subscriptionNames": ["Genesys Cloud CX 4 Hourly"]
+    }
+  ]
+}

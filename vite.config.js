@@ -1,3 +1,5 @@
+import { copyFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -8,6 +10,15 @@ const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1];
 const base = process.env.VITE_BASE_PATH || (repositoryName ? `/${repositoryName}/` : './');
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'gh-pages-spa-fallback',
+      closeBundle() {
+        const dist = join(process.cwd(), 'dist');
+        copyFileSync(join(dist, 'index.html'), join(dist, '404.html'));
+      },
+    },
+  ],
   base,
 });
