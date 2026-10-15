@@ -934,6 +934,14 @@ export default function App() {
               <h3>configs.json</h3>
               <button className="ghost copy-button" onClick={() => copyGeneratedOutput('configs.json', selectedConfigsJson)} title="Copy configs.json to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'configs.json' ? 'Copied' : 'Copy'}</button>
             </div>
+            {selectedSplit.kind === 'default' && (
+              <div className="auto-replace-warning" role="status">
+                <h4><TriangleAlert size={16} aria-hidden="true" /> Check export resource list</h4>
+                <p>
+                  <code>CheckExportResourceList</code> is intentionally empty for core. OrgSync re-runs export when a listed resource type in <code>CheckExportResourceList</code> is not detected; core owns most resource types, so listing them could inadvertently retry when the org simply has no instances of a type.
+                </p>
+              </div>
+            )}
             <pre>{selectedConfigsJson}</pre>
           </div>
         </section>
