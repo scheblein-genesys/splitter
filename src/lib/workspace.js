@@ -15,6 +15,7 @@ export function parseReplaceEntitiesMode(value) {
   return VALID_REPLACE_ENTITIES_MODES.has(value) ? value : DEFAULT_REPLACE_ENTITIES_MODE;
 }
 
+/** Core leaves CheckExportResourceList empty; listed types trigger OrgSync re-export when not detected (see UI note on core configs.json). */
 export function getCheckExportResourceList(generatedSplit) {
   if (generatedSplit?.kind !== 'focused') return [];
   return generatedSplit.selectedResources || [];

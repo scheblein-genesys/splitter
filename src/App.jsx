@@ -934,6 +934,14 @@ export default function App() {
               <h3>configs.json</h3>
               <button className="ghost copy-button" onClick={() => copyGeneratedOutput('configs.json', selectedConfigsJson)} title="Copy configs.json to clipboard"><ClipboardCopy size={14}/>{copiedOutput === 'configs.json' ? 'Copied' : 'Copy'}</button>
             </div>
+            {selectedSplit.kind === 'default' && (
+              <div className="auto-replace-warning" role="status">
+                <h4><TriangleAlert size={16} aria-hidden="true" /> Check export resource list</h4>
+                <p>
+                  <code>CheckExportResourceList</code> is left empty for core on purpose. OrgSync re-runs export when a listed resource type does not appear in the export. Core owns most resource types, so listing them all can cause endless retries when the org has no objects of that type. Add only the types you want export verification to enforce.
+                </p>
+              </div>
+            )}
             <pre>{selectedConfigsJson}</pre>
           </div>
         </section>
