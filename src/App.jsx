@@ -938,7 +938,7 @@ export default function App() {
               <div className="auto-replace-warning" role="status">
                 <h4><TriangleAlert size={16} aria-hidden="true" /> Check export resource list</h4>
                 <p>
-                  <code>CheckExportResourceList</code> is intentionally empty for core. OrgSync re-runs export when a listed resource type in <code>CheckExportResourceList</code> is not detected; core owns most resource types, so listing them could inadvertently retry when the org simply has no instances of a type.
+                  <code>CheckExportResourceList</code> is left empty for core on purpose. OrgSync re-runs export when a listed resource type does not appear in the export. Core owns most resource types, so listing them all can cause endless retries when the org has no objects of that type. Add only the types you want export verification to enforce.
                 </p>
               </div>
             )}
